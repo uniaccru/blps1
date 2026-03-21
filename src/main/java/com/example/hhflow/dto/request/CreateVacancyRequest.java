@@ -1,6 +1,5 @@
 package com.example.hhflow.dto.request;
 
-import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
@@ -17,7 +16,6 @@ public class CreateVacancyRequest {
         @NotNull
         private Boolean requiresTest;
 
-        @Email
-        @NotBlank
-        private String employerEmail;
+        @NotNull
+        private Long employerId;
 }

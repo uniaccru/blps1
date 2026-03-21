@@ -1,9 +1,11 @@
 package com.example.hhflow.service;
 
 import com.example.hhflow.dto.request.CreateVacancyRequest;
+import com.example.hhflow.model.Employer;
 import com.example.hhflow.exception.NotFoundException;
 import com.example.hhflow.model.Vacancy;
 import com.example.hhflow.model.VacancyStatus;
+import com.example.hhflow.repository.EmployerRepository;
 import com.example.hhflow.repository.VacancyRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,6 +18,7 @@ import java.util.List;
 public class VacancyService {
 
     private final VacancyRepository vacancyRepository;
+    private final EmployerRepository employerRepository;
 
     @Transactional(readOnly = true)
     public List<Vacancy> findAll() {
@@ -30,10 +33,13 @@ public class VacancyService {
 
     @Transactional
     public Vacancy create(CreateVacancyRequest request) {
+        Employer employer = employerRepository.findById(request.getEmployerId())
+            .orElseThrow(() -> new NotFoundException("Employer not found: " + request.getEmployerId()));
+
         Vacancy vacancy = new Vacancy();
         vacancy.setTitle(request.getTitle());
         vacancy.setRequiresTest(request.getRequiresTest());
-        vacancy.setEmployerEmail(request.getEmployerEmail());
+        vacancy.setEmployer(employer);
         vacancy.setStatus(VacancyStatus.ACTIVE);
         return vacancyRepository.save(vacancy);
     }

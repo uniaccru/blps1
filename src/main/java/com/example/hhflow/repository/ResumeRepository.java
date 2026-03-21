@@ -7,5 +7,5 @@ import com.example.hhflow.model.Resume;
 import java.util.Optional;
 
 public interface ResumeRepository extends JpaRepository<Resume, Long> {
-    Optional<Resume> findByCandidateId(Long candidateId);
+    Optional<Resume> findByApplicantId(Long applicantId);
 }

@@ -10,6 +10,8 @@ import com.example.hhflow.model.Resume;
 import com.example.hhflow.model.SubmissionOutcome;
 import com.example.hhflow.model.Vacancy;
 import com.example.hhflow.model.VacancyStatus;
+import com.example.hhflow.service.subprocess.AuthSubprocessService;
+import com.example.hhflow.service.subprocess.RegistrationSubprocessService;
 import com.example.hhflow.service.subprocess.ResumeCreationSubprocessService;
 import com.example.hhflow.service.subprocess.TestSubprocessService;
 import lombok.RequiredArgsConstructor;
@@ -26,12 +28,34 @@ public class ApplicationProcessService {
     private final ResumeService resumeService;
     private final JobApplicationService jobApplicationService;
     private final NotificationService notificationService;
+    private final AuthSubprocessService authSubprocessService;
+    private final RegistrationSubprocessService registrationSubprocessService;
     private final ResumeCreationSubprocessService resumeCreationSubprocessService;
     private final TestSubprocessService testSubprocessService;
     private final ApiMapper apiMapper;
 
     @Transactional
     public SubmissionResponse submitApplication(SubmitApplicationRequest request) {
+        if (!authSubprocessService.isAuthorized(request.getSimulateAuthorized())) {
+            return new SubmissionResponse(
+                    SubmissionOutcome.UNAUTHORIZED,
+                    "User is not authorized. Submission declined.",
+                    null
+            );
+        }
+
+        boolean registered = registrationSubprocessService.registerIfMissing(
+                request.getCandidateId(),
+                request.getSimulateRegistrationSuccess()
+        );
+        if (!registered) {
+            return new SubmissionResponse(
+                    SubmissionOutcome.REGISTRATION_FAILED,
+                    "Registration subprocess returned failure.",
+                    null
+            );
+        }
+
         Vacancy vacancy = vacancyService.getById(request.getVacancyId());
         if (vacancy.getStatus() == VacancyStatus.ARCHIVED) {
             return new SubmissionResponse(
@@ -86,7 +110,7 @@ public class ApplicationProcessService {
     private Optional<Resume> resolveResume(SubmitApplicationRequest request) {
         if (request.getResumeId() != null) {
             Resume resume = resumeService.getById(request.getResumeId());
-            if (!resume.getCandidateId().equals(request.getCandidateId())) {
+            if (!resume.getApplicant().getId().equals(request.getCandidateId())) {
                 throw new BusinessException("Resume does not belong to candidate: " + request.getCandidateId());
             }
             return Optional.of(resume);

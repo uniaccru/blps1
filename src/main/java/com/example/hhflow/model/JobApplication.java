@@ -22,8 +22,9 @@ public class JobApplication {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private Long candidateId;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "applicant_id", nullable = false)
+    private Applicant applicant;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "vacancy_id", nullable = false)
@@ -51,12 +52,12 @@ public class JobApplication {
         this.id = id;
     }
 
-    public Long getCandidateId() {
-        return candidateId;
+    public Applicant getApplicant() {
+        return applicant;
     }
 
-    public void setCandidateId(Long candidateId) {
-        this.candidateId = candidateId;
+    public void setApplicant(Applicant applicant) {
+        this.applicant = applicant;
     }
 
     public Vacancy getVacancy() {

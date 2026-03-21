@@ -12,6 +12,6 @@ public class NotificationService {
     private static final Logger log = LoggerFactory.getLogger(NotificationService.class);
 
     public void notifyEmployer(JobApplication application) {
-        log.info("Employer {} notified about application {}", application.getVacancy().getEmployerEmail(), application.getId());
+        log.info("Employer {} notified about application {}", application.getVacancy().getEmployer().getEmail(), application.getId());
     }
 }

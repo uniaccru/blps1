@@ -7,6 +7,8 @@ import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 @Entity
@@ -27,8 +29,9 @@ public class Vacancy {
     @Column(nullable = false)
     private boolean requiresTest;
 
-    @Column(nullable = false)
-    private String employerEmail;
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "employer_id", nullable = false)
+    private Employer employer;
 
     public Long getId() {
         return id;
@@ -62,11 +65,11 @@ public class Vacancy {
         this.requiresTest = requiresTest;
     }
 
-    public String getEmployerEmail() {
-        return employerEmail;
+    public Employer getEmployer() {
+        return employer;
     }
 
-    public void setEmployerEmail(String employerEmail) {
-        this.employerEmail = employerEmail;
+    public void setEmployer(Employer employer) {
+        this.employer = employer;
     }
 }

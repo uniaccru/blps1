@@ -50,6 +50,55 @@
       "headers": []
     },
     {
+      "_id": "req_get_employers",
+      "_type": "request",
+      "parentId": "fld_public_api",
+      "name": "Get employers",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/v1/employers",
+      "body": {},
+      "parameters": [],
+      "headers": []
+    },
+    {
+      "_id": "req_create_employer",
+      "_type": "request",
+      "parentId": "fld_public_api",
+      "name": "Create employer",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/v1/employers",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"email\": \"new-hr@company.com\"\n}"
+      },
+      "parameters": []
+    },
+    {
+      "_id": "req_create_vacancy_by_employer",
+      "_type": "request",
+      "parentId": "fld_public_api",
+      "name": "Create vacancy by employerId",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/v1/vacancies",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"title\": \"Senior Java Engineer\",\n  \"requiresTest\": true,\n  \"employerId\": 1\n}"
+      },
+      "parameters": []
+    },
+    {
       "_id": "req_submit_success_no_test",
       "_type": "request",
       "parentId": "fld_public_api",
@@ -64,7 +113,7 @@
       ],
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"vacancyId\": 1,\n  \"candidateId\": 101,\n  \"resumeId\": 1\n}"
+        "text": "{\n  \"vacancyId\": 1,\n  \"candidateId\": 101,\n  \"resumeId\": 1,\n  \"simulateAuthorized\": true\n}"
       },
       "parameters": []
     },
@@ -83,7 +132,7 @@
       ],
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"vacancyId\": 2,\n  \"candidateId\": 101,\n  \"resumeId\": 1,\n  \"simulateTestPassed\": true\n}"
+        "text": "{\n  \"vacancyId\": 2,\n  \"candidateId\": 101,\n  \"resumeId\": 1,\n  \"simulateAuthorized\": true,\n  \"simulateTestPassed\": true\n}"
       },
       "parameters": []
     },
@@ -102,7 +151,7 @@
       ],
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"vacancyId\": 2,\n  \"candidateId\": 101,\n  \"resumeId\": 1,\n  \"simulateTestPassed\": false\n}"
+        "text": "{\n  \"vacancyId\": 2,\n  \"candidateId\": 101,\n  \"resumeId\": 1,\n  \"simulateAuthorized\": true,\n  \"simulateTestPassed\": false\n}"
       },
       "parameters": []
     },
@@ -121,7 +170,45 @@
       ],
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"vacancyId\": 3,\n  \"candidateId\": 101,\n  \"resumeId\": 1\n}"
+        "text": "{\n  \"vacancyId\": 3,\n  \"candidateId\": 101,\n  \"resumeId\": 1,\n  \"simulateAuthorized\": true\n}"
+      },
+      "parameters": []
+    },
+    {
+      "_id": "req_submit_unauthorized",
+      "_type": "request",
+      "parentId": "fld_public_api",
+      "name": "Submit declined (unauthorized)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/v1/applications/submit",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"vacancyId\": 1,\n  \"candidateId\": 101,\n  \"resumeId\": 1,\n  \"simulateAuthorized\": false\n}"
+      },
+      "parameters": []
+    },
+    {
+      "_id": "req_submit_registration_failed",
+      "_type": "request",
+      "parentId": "fld_public_api",
+      "name": "Submit failed (registration failed)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/v1/applications/submit",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"vacancyId\": 1,\n  \"candidateId\": 999,\n  \"simulateAuthorized\": true,\n  \"simulateRegistrationSuccess\": false\n}"
       },
       "parameters": []
     },
@@ -140,7 +227,7 @@
       ],
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"vacancyId\": 1,\n  \"candidateId\": 777,\n  \"simulateResumeCreationSuccess\": false\n}"
+        "text": "{\n  \"vacancyId\": 1,\n  \"candidateId\": 777,\n  \"simulateAuthorized\": true,\n  \"simulateRegistrationSuccess\": true,\n  \"simulateResumeCreationSuccess\": false\n}"
       },
       "parameters": []
     },
@@ -159,7 +246,7 @@
       ],
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"vacancyId\": 1,\n  \"candidateId\": 888,\n  \"resumeFullName\": \"Auto Candidate 888\",\n  \"resumeSummary\": \"Java/Spring basics\",\n  \"simulateResumeCreationSuccess\": true\n}"
+        "text": "{\n  \"vacancyId\": 1,\n  \"candidateId\": 888,\n  \"resumeFullName\": \"Auto Candidate 888\",\n  \"resumeSummary\": \"Java/Spring basics\",\n  \"simulateAuthorized\": true,\n  \"simulateRegistrationSuccess\": true,\n  \"simulateResumeCreationSuccess\": true\n}"
       },
       "parameters": []
     },

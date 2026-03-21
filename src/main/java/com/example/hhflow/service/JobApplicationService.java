@@ -1,5 +1,6 @@
 package com.example.hhflow.service;
 
+import com.example.hhflow.exception.BusinessException;
 import com.example.hhflow.exception.NotFoundException;
 import com.example.hhflow.model.ApplicationStatus;
 import com.example.hhflow.model.JobApplication;
@@ -23,8 +24,12 @@ public class JobApplicationService {
 
     @Transactional
     public JobApplication createCompleted(Long candidateId, Vacancy vacancy, Resume resume) {
+        if (!resume.getApplicant().getId().equals(candidateId)) {
+            throw new BusinessException("Resume does not belong to candidate: " + candidateId);
+        }
+
         JobApplication application = new JobApplication();
-        application.setCandidateId(candidateId);
+        application.setApplicant(resume.getApplicant());
         application.setVacancy(vacancy);
         application.setResume(resume);
         application.setStatus(ApplicationStatus.COMPLETED);

@@ -5,6 +5,8 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 import java.time.OffsetDateTime;
@@ -17,8 +19,9 @@ public class Resume {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
-    private Long candidateId;
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "applicant_id", nullable = false, unique = true)
+    private Applicant applicant;
 
     @Column(nullable = false)
     private String fullName;
@@ -37,12 +40,12 @@ public class Resume {
         this.id = id;
     }
 
-    public Long getCandidateId() {
-        return candidateId;
+    public Applicant getApplicant() {
+        return applicant;
     }
 
-    public void setCandidateId(Long candidateId) {
-        this.candidateId = candidateId;
+    public void setApplicant(Applicant applicant) {
+        this.applicant = applicant;
     }
 
     public String getFullName() {

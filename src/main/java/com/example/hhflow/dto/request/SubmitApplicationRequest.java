@@ -21,6 +21,10 @@ public class SubmitApplicationRequest {
 
         private String resumeSummary;
 
+        private Boolean simulateAuthorized;
+
+        private Boolean simulateRegistrationSuccess;
+
         private Boolean simulateResumeCreationSuccess;
 
         private Boolean simulateTestPassed;
