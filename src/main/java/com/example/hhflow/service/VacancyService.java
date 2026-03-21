@@ -1,9 +1,9 @@
 package com.example.hhflow.service;
 
-import com.example.hhflow.domain.Vacancy;
-import com.example.hhflow.domain.VacancyStatus;
 import com.example.hhflow.dto.request.CreateVacancyRequest;
 import com.example.hhflow.exception.NotFoundException;
+import com.example.hhflow.model.Vacancy;
+import com.example.hhflow.model.VacancyStatus;
 import com.example.hhflow.repository.VacancyRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

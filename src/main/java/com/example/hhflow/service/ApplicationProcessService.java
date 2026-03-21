@@ -1,15 +1,15 @@
 package com.example.hhflow.service;
 
-import com.example.hhflow.domain.JobApplication;
-import com.example.hhflow.domain.Resume;
-import com.example.hhflow.domain.SubmissionOutcome;
-import com.example.hhflow.domain.Vacancy;
-import com.example.hhflow.domain.VacancyStatus;
 import com.example.hhflow.dto.request.SubmitApplicationRequest;
 import com.example.hhflow.dto.response.ApplicationDto;
 import com.example.hhflow.dto.response.SubmissionResponse;
 import com.example.hhflow.exception.BusinessException;
 import com.example.hhflow.mapper.ApiMapper;
+import com.example.hhflow.model.JobApplication;
+import com.example.hhflow.model.Resume;
+import com.example.hhflow.model.SubmissionOutcome;
+import com.example.hhflow.model.Vacancy;
+import com.example.hhflow.model.VacancyStatus;
 import com.example.hhflow.service.subprocess.ResumeCreationSubprocessService;
 import com.example.hhflow.service.subprocess.TestSubprocessService;
 import lombok.RequiredArgsConstructor;

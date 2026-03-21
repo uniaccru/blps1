@@ -1,4 +1,4 @@
-package com.example.hhflow.domain;
+package com.example.hhflow.model;
 
 public enum SubmissionOutcome {
     COMPLETED,

@@ -1,18 +1,15 @@
 package com.example.hhflow.dto.request;
 
-import com.example.hhflow.domain.VacancyStatus;
 import javax.validation.constraints.NotNull;
 
+import com.example.hhflow.model.VacancyStatus;
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
 public class VacancyStatusUpdateRequest {
 
 	@NotNull
 	private VacancyStatus status;
-
-	public VacancyStatus getStatus() {
-		return status;
-	}
-
-	public void setStatus(VacancyStatus status) {
-		this.status = status;
-	}
 }

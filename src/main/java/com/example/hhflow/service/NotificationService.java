@@ -1,9 +1,10 @@
 package com.example.hhflow.service;
 
-import com.example.hhflow.domain.JobApplication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+
+import com.example.hhflow.model.JobApplication;
 
 @Service
 public class NotificationService {

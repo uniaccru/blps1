@@ -4,6 +4,11 @@ import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
 public class CreateVacancyRequest {
 
         @NotBlank
@@ -15,28 +20,4 @@ public class CreateVacancyRequest {
         @Email
         @NotBlank
         private String employerEmail;
-
-        public String getTitle() {
-                return title;
-        }
-
-        public void setTitle(String title) {
-                this.title = title;
-        }
-
-        public Boolean getRequiresTest() {
-                return requiresTest;
-        }
-
-        public void setRequiresTest(Boolean requiresTest) {
-                this.requiresTest = requiresTest;
-        }
-
-        public String getEmployerEmail() {
-                return employerEmail;
-        }
-
-        public void setEmployerEmail(String employerEmail) {
-                this.employerEmail = employerEmail;
-        }
 }

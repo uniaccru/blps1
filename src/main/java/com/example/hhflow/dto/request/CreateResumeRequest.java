@@ -3,6 +3,11 @@ package com.example.hhflow.dto.request;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
 public class CreateResumeRequest {
 
         @NotNull
@@ -13,28 +18,4 @@ public class CreateResumeRequest {
 
         @NotBlank
         private String summary;
-
-        public Long getCandidateId() {
-                return candidateId;
-        }
-
-        public void setCandidateId(Long candidateId) {
-                this.candidateId = candidateId;
-        }
-
-        public String getFullName() {
-                return fullName;
-        }
-
-        public void setFullName(String fullName) {
-                this.fullName = fullName;
-        }
-
-        public String getSummary() {
-                return summary;
-        }
-
-        public void setSummary(String summary) {
-                this.summary = summary;
-        }
 }

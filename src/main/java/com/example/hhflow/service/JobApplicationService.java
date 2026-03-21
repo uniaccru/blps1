@@ -1,10 +1,10 @@
 package com.example.hhflow.service;
 
-import com.example.hhflow.domain.ApplicationStatus;
-import com.example.hhflow.domain.JobApplication;
-import com.example.hhflow.domain.Resume;
-import com.example.hhflow.domain.Vacancy;
 import com.example.hhflow.exception.NotFoundException;
+import com.example.hhflow.model.ApplicationStatus;
+import com.example.hhflow.model.JobApplication;
+import com.example.hhflow.model.Resume;
+import com.example.hhflow.model.Vacancy;
 import com.example.hhflow.repository.JobApplicationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

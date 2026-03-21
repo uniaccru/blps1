@@ -1,7 +1,8 @@
 package com.example.hhflow.repository;
 
-import com.example.hhflow.domain.Resume;
 import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.example.hhflow.model.Resume;
 
 import java.util.Optional;
 

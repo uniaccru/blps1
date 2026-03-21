@@ -1,4 +1,4 @@
-package com.example.hhflow.domain;
+package com.example.hhflow.model;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
