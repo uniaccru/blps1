@@ -1,8 +1,8 @@
 package com.example.hhflow.controller;
 
-import com.example.hhflow.dto.CreateVacancyRequest;
-import com.example.hhflow.dto.VacancyDto;
-import com.example.hhflow.dto.VacancyStatusUpdateRequest;
+import com.example.hhflow.dto.request.CreateVacancyRequest;
+import com.example.hhflow.dto.request.VacancyStatusUpdateRequest;
+import com.example.hhflow.dto.response.VacancyDto;
 import com.example.hhflow.mapper.ApiMapper;
 import com.example.hhflow.service.VacancyService;
 import javax.validation.Valid;

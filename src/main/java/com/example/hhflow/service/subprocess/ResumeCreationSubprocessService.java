@@ -1,7 +1,7 @@
 package com.example.hhflow.service.subprocess;
 
 import com.example.hhflow.domain.Resume;
-import com.example.hhflow.dto.CreateResumeRequest;
+import com.example.hhflow.dto.request.CreateResumeRequest;
 import com.example.hhflow.service.ResumeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

@@ -1,8 +1,8 @@
 package com.example.hhflow.controller;
 
-import com.example.hhflow.dto.ApplicationDto;
-import com.example.hhflow.dto.SubmissionResponse;
-import com.example.hhflow.dto.SubmitApplicationRequest;
+import com.example.hhflow.dto.request.SubmitApplicationRequest;
+import com.example.hhflow.dto.response.ApplicationDto;
+import com.example.hhflow.dto.response.SubmissionResponse;
 import com.example.hhflow.mapper.ApiMapper;
 import com.example.hhflow.service.ApplicationProcessService;
 import com.example.hhflow.service.JobApplicationService;

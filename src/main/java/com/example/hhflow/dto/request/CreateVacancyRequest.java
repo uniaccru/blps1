@@ -1,4 +1,4 @@
-package com.example.hhflow.dto;
+package com.example.hhflow.dto.request;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;

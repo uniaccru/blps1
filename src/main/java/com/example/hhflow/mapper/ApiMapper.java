@@ -3,9 +3,9 @@ package com.example.hhflow.mapper;
 import com.example.hhflow.domain.JobApplication;
 import com.example.hhflow.domain.Resume;
 import com.example.hhflow.domain.Vacancy;
-import com.example.hhflow.dto.ApplicationDto;
-import com.example.hhflow.dto.ResumeDto;
-import com.example.hhflow.dto.VacancyDto;
+import com.example.hhflow.dto.response.ApplicationDto;
+import com.example.hhflow.dto.response.ResumeDto;
+import com.example.hhflow.dto.response.VacancyDto;
 import org.springframework.stereotype.Component;
 
 @Component

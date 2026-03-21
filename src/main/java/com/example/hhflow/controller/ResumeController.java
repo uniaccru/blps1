@@ -1,7 +1,7 @@
 package com.example.hhflow.controller;
 
-import com.example.hhflow.dto.CreateResumeRequest;
-import com.example.hhflow.dto.ResumeDto;
+import com.example.hhflow.dto.request.CreateResumeRequest;
+import com.example.hhflow.dto.response.ResumeDto;
 import com.example.hhflow.mapper.ApiMapper;
 import com.example.hhflow.service.ResumeService;
 import javax.validation.Valid;
