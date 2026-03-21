@@ -1,0 +1,178 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2026-03-07T12:00:00.000Z",
+  "__export_source": "github-copilot",
+  "resources": [
+    {
+      "_id": "wrk_hh_flow",
+      "_type": "workspace",
+      "name": "HH Flow API",
+      "description": "REST API for candidate vacancy response process",
+      "parentId": null,
+      "scope": "collection"
+    },
+    {
+      "_id": "env_hh_flow_base",
+      "_type": "environment",
+      "parentId": "wrk_hh_flow",
+      "name": "Base Environment",
+      "data": {
+        "base_url": "http://localhost:8080"
+      }
+    },
+    {
+      "_id": "fld_public_api",
+      "_type": "request_group",
+      "parentId": "wrk_hh_flow",
+      "name": "Public API"
+    },
+    {
+      "_id": "req_get_vacancies",
+      "_type": "request",
+      "parentId": "fld_public_api",
+      "name": "Get vacancies",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/v1/vacancies",
+      "body": {},
+      "parameters": [],
+      "headers": []
+    },
+    {
+      "_id": "req_get_resumes",
+      "_type": "request",
+      "parentId": "fld_public_api",
+      "name": "Get resumes",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/v1/resumes",
+      "body": {},
+      "parameters": [],
+      "headers": []
+    },
+    {
+      "_id": "req_submit_success_no_test",
+      "_type": "request",
+      "parentId": "fld_public_api",
+      "name": "Submit success (no test)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/v1/applications/submit",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"vacancyId\": 1,\n  \"candidateId\": 101,\n  \"resumeId\": 1\n}"
+      },
+      "parameters": []
+    },
+    {
+      "_id": "req_submit_success_with_test",
+      "_type": "request",
+      "parentId": "fld_public_api",
+      "name": "Submit success (test passed)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/v1/applications/submit",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"vacancyId\": 2,\n  \"candidateId\": 101,\n  \"resumeId\": 1,\n  \"simulateTestPassed\": true\n}"
+      },
+      "parameters": []
+    },
+    {
+      "_id": "req_submit_failed_test",
+      "_type": "request",
+      "parentId": "fld_public_api",
+      "name": "Submit auto reject (test failed)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/v1/applications/submit",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"vacancyId\": 2,\n  \"candidateId\": 101,\n  \"resumeId\": 1,\n  \"simulateTestPassed\": false\n}"
+      },
+      "parameters": []
+    },
+    {
+      "_id": "req_submit_archived",
+      "_type": "request",
+      "parentId": "fld_public_api",
+      "name": "Submit declined (archived vacancy)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/v1/applications/submit",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"vacancyId\": 3,\n  \"candidateId\": 101,\n  \"resumeId\": 1\n}"
+      },
+      "parameters": []
+    },
+    {
+      "_id": "req_submit_resume_creation_failed",
+      "_type": "request",
+      "parentId": "fld_public_api",
+      "name": "Submit failed (resume creation failed)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/v1/applications/submit",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"vacancyId\": 1,\n  \"candidateId\": 777,\n  \"simulateResumeCreationSuccess\": false\n}"
+      },
+      "parameters": []
+    },
+    {
+      "_id": "req_submit_resume_creation_success",
+      "_type": "request",
+      "parentId": "fld_public_api",
+      "name": "Submit success (autocreate resume)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/v1/applications/submit",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"vacancyId\": 1,\n  \"candidateId\": 888,\n  \"resumeFullName\": \"Auto Candidate 888\",\n  \"resumeSummary\": \"Java/Spring basics\",\n  \"simulateResumeCreationSuccess\": true\n}"
+      },
+      "parameters": []
+    },
+    {
+      "_id": "req_get_applications",
+      "_type": "request",
+      "parentId": "fld_public_api",
+      "name": "Get applications",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/v1/applications",
+      "body": {},
+      "parameters": [],
+      "headers": []
+    }
+  ]
+}

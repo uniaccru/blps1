@@ -1,0 +1,23 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:hh_flow}
+    username: ${DB_USER:hh_user}
+    password: ${DB_PASSWORD:hh_password}
+  jpa:
+    hibernate:
+      ddl-auto: create
+    open-in-view: false
+    defer-datasource-initialization: true
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: true
+  sql:
+    init:
+      mode: always
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
