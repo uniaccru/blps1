@@ -1,5 +1,6 @@
 package com.example.hhflow.dto.request;
 
+import com.example.hhflow.validation.ValidationConstraints;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.Size;
@@ -22,10 +23,10 @@ public class SubmitApplicationRequest {
         @Positive(message = "must be a positive number")
         private Long resumeId;
 
-        @Size(max = 150, message = "must be at most 150 characters")
+        @Size(max = ValidationConstraints.FULL_NAME_MAX_LENGTH, message = "must be at most {max} characters")
         private String resumeFullName;
 
-        @Size(max = 2000, message = "must be at most 2000 characters")
+        @Size(max = ValidationConstraints.SUMMARY_MAX_LENGTH, message = "must be at most {max} characters")
         private String resumeSummary;
 
         private Boolean simulateAuthorized;

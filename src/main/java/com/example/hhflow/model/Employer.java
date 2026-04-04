@@ -1,5 +1,6 @@
 package com.example.hhflow.model;
 
+import com.example.hhflow.validation.ValidationConstraints;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -15,7 +16,7 @@ public class Employer {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 255)
+    @Column(nullable = false, unique = true, length = ValidationConstraints.EMAIL_MAX_LENGTH)
     private String email;
 
     public Long getId() {

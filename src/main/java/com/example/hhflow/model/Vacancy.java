@@ -1,5 +1,6 @@
 package com.example.hhflow.model;
 
+import com.example.hhflow.validation.ValidationConstraints;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -19,7 +20,7 @@ public class Vacancy {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 150)
+    @Column(nullable = false, length = ValidationConstraints.TITLE_MAX_LENGTH)
     private String title;
 
     @Enumerated(EnumType.STRING)

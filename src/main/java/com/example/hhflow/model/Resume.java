@@ -1,5 +1,6 @@
 package com.example.hhflow.model;
 
+import com.example.hhflow.validation.ValidationConstraints;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -23,10 +24,10 @@ public class Resume {
     @JoinColumn(name = "applicant_id", nullable = false, unique = true)
     private Applicant applicant;
 
-    @Column(nullable = false, length = 150)
+    @Column(nullable = false, length = ValidationConstraints.FULL_NAME_MAX_LENGTH)
     private String fullName;
 
-    @Column(nullable = false, length = 2000)
+    @Column(nullable = false, length = ValidationConstraints.SUMMARY_MAX_LENGTH)
     private String summary;
 
     @Column(nullable = false)
