@@ -2,6 +2,8 @@ package com.example.hhflow.dto.request;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Positive;
+import javax.validation.constraints.Size;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -10,12 +12,14 @@ import lombok.Setter;
 @Setter
 public class CreateVacancyRequest {
 
-        @NotBlank
+        @NotBlank(message = "must not be blank")
+        @Size(max = 150, message = "must be at most 150 characters")
         private String title;
 
-        @NotNull
+        @NotNull(message = "must not be null")
         private Boolean requiresTest;
 
-        @NotNull
+        @NotNull(message = "must not be null")
+        @Positive(message = "must be a positive number")
         private Long employerId;
 }

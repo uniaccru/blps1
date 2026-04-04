@@ -23,10 +23,10 @@ public class Resume {
     @JoinColumn(name = "applicant_id", nullable = false, unique = true)
     private Applicant applicant;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 150)
     private String fullName;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 2000)
     private String summary;
 
     @Column(nullable = false)

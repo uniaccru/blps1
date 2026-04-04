@@ -10,6 +10,6 @@ import lombok.Setter;
 @Setter
 public class VacancyStatusUpdateRequest {
 
-	@NotNull
+	@NotNull(message = "must not be null")
 	private VacancyStatus status;
 }
