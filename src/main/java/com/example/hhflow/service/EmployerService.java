@@ -17,12 +17,10 @@ public class EmployerService {
 
     private final EmployerRepository employerRepository;
 
-    @Transactional(readOnly = true)
     public List<Employer> findAll() {
         return employerRepository.findAll();
     }
 
-    @Transactional(readOnly = true)
     public Employer getById(Long id) {
         return employerRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Employer not found: " + id));

@@ -24,18 +24,15 @@ public class ResumeService {
     private final ApplicantRepository applicantRepository;
     private final Clock clock;
 
-    @Transactional(readOnly = true)
     public List<Resume> findAll() {
         return resumeRepository.findAll();
     }
 
-    @Transactional(readOnly = true)
     public Resume getById(Long id) {
         return resumeRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Resume not found: " + id));
     }
 
-    @Transactional(readOnly = true)
     public Optional<Resume> findByCandidateId(Long candidateId) {
         return resumeRepository.findByApplicantId(candidateId);
     }

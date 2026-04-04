@@ -20,12 +20,10 @@ public class VacancyService {
     private final VacancyRepository vacancyRepository;
     private final EmployerRepository employerRepository;
 
-    @Transactional(readOnly = true)
     public List<Vacancy> findAll() {
         return vacancyRepository.findAll();
     }
 
-    @Transactional(readOnly = true)
     public Vacancy getById(Long vacancyId) {
         return vacancyRepository.findById(vacancyId)
                 .orElseThrow(() -> new NotFoundException("Vacancy not found: " + vacancyId));
