@@ -7,11 +7,11 @@ import com.example.hhflow.model.Vacancy;
 import com.example.hhflow.model.VacancyStatus;
 import com.example.hhflow.repository.EmployerRepository;
 import com.example.hhflow.repository.VacancyRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -20,8 +20,8 @@ public class VacancyService {
     private final VacancyRepository vacancyRepository;
     private final EmployerRepository employerRepository;
 
-    public List<Vacancy> findAll() {
-        return vacancyRepository.findAll();
+    public Page<Vacancy> findAll(Pageable pageable) {
+        return vacancyRepository.findAll(pageable);
     }
 
     public Vacancy getById(Long vacancyId) {

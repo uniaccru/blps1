@@ -7,13 +7,14 @@ import com.example.hhflow.model.Applicant;
 import com.example.hhflow.model.Resume;
 import com.example.hhflow.repository.ApplicantRepository;
 import com.example.hhflow.repository.ResumeRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 import java.time.OffsetDateTime;
-import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -24,8 +25,8 @@ public class ResumeService {
     private final ApplicantRepository applicantRepository;
     private final Clock clock;
 
-    public List<Resume> findAll() {
-        return resumeRepository.findAll();
+    public Page<Resume> findAll(Pageable pageable) {
+        return resumeRepository.findAll(pageable);
     }
 
     public Resume getById(Long id) {

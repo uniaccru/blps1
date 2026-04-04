@@ -7,12 +7,13 @@ import com.example.hhflow.model.JobApplication;
 import com.example.hhflow.model.Resume;
 import com.example.hhflow.model.Vacancy;
 import com.example.hhflow.repository.JobApplicationRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.Clock;
 import java.time.OffsetDateTime;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -35,8 +36,8 @@ public class JobApplicationService {
         return jobApplicationRepository.save(application);
     }
 
-    public List<JobApplication> findAll() {
-        return jobApplicationRepository.findAll();
+    public Page<JobApplication> findAll(Pageable pageable) {
+        return jobApplicationRepository.findAll(pageable);
     }
 
     public JobApplication getById(Long id) {

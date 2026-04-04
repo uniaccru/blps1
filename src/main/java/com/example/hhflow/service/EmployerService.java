@@ -5,11 +5,11 @@ import com.example.hhflow.exception.BusinessException;
 import com.example.hhflow.exception.NotFoundException;
 import com.example.hhflow.model.Employer;
 import com.example.hhflow.repository.EmployerRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -17,8 +17,8 @@ public class EmployerService {
 
     private final EmployerRepository employerRepository;
 
-    public List<Employer> findAll() {
-        return employerRepository.findAll();
+    public Page<Employer> findAll(Pageable pageable) {
+        return employerRepository.findAll(pageable);
     }
 
     public Employer getById(Long id) {
