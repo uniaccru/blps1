@@ -25,7 +25,10 @@
         "password": "password",
         "employer_token": "",
         "applicant_token": "",
-        "vacancy_id": "1"
+        "vacancy_id": "1",
+        "employer_user_id": "1",
+        "applicant_user_id": "4",
+        "resume_id": "1"
       }
     },
     {
@@ -69,7 +72,7 @@
       "parentId": "fld_public",
       "name": "GET /vacancies/{id}",
       "method": "GET",
-      "url": "{{ _.base_url }}/api/v1/vacancies/1",
+      "url": "{{ _.base_url }}/api/v1/vacancies/{{ _.vacancy_id }}",
       "headers": [],
       "parameters": [],
       "body": {}
@@ -90,7 +93,7 @@
       "parameters": [],
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"vacancyId\": 1,\n  \"resumeId\": 1\n}"
+        "text": "{\n  \"vacancyId\": {{ _.vacancy_id }},\n  \"resumeId\": {{ _.resume_id }}\n}"
       }
     },
     {
@@ -325,7 +328,7 @@
       "parameters": [],
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"vacancyId\": 1,\n  \"resumeId\": 1\n}"
+        "text": "{\n  \"vacancyId\": {{ _.vacancy_id }},\n  \"resumeId\": {{ _.resume_id }}\n}"
       }
     },
     {
@@ -348,7 +351,7 @@
       "parameters": [],
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"vacancyId\": 3,\n  \"resumeId\": 1\n}"
+        "text": "{\n  \"vacancyId\": 3,\n  \"resumeId\": {{ _.resume_id }}\n}"
       }
     },
     {
@@ -371,7 +374,7 @@
       "parameters": [],
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"vacancyId\": 1,\n  \"resumeFullName\": \"\",\n  \"resumeSummary\": \"\"\n}"
+        "text": "{\n  \"vacancyId\": {{ _.vacancy_id }},\n  \"resumeFullName\": \"\",\n  \"resumeSummary\": \"\"\n}"
       }
     },
     {
@@ -394,7 +397,7 @@
       "parameters": [],
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"vacancyId\": 1,\n  \"resumeFullName\": \"Иван Авто\",\n  \"resumeSummary\": \"Kotlin, Spring\"\n}"
+        "text": "{\n  \"vacancyId\": {{ _.vacancy_id }},\n  \"resumeFullName\": \"Иван Авто\",\n  \"resumeSummary\": \"Kotlin, Spring\"\n}"
       }
     },
     {
@@ -403,7 +406,7 @@
       "parentId": "fld_applicant",
       "name": "GET /resumes/1",
       "method": "GET",
-      "url": "{{ _.base_url }}/api/v1/resumes/1",
+      "url": "{{ _.base_url }}/api/v1/resumes/{{ _.resume_id }}",
       "headers": [
         {
           "name": "Authorization",
