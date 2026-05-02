@@ -15,7 +15,9 @@ import com.example.hhflow.service.subprocess.ResumeCreationSubprocessService;
 import com.example.hhflow.service.subprocess.TestSubprocessService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 import java.util.Optional;
 
@@ -31,8 +33,8 @@ public class ApplicationProcessService {
     private final ResumeCreationSubprocessService resumeCreationSubprocessService;
     private final TestSubprocessService testSubprocessService;
     private final ApiMapper apiMapper;
+    private final PlatformTransactionManager transactionManager;
 
-    @Transactional
     public SubmissionResponse submitApplication(SubmitApplicationRequest request, Long applicantUserId) {
         if (userRepository.findById(applicantUserId).filter(u -> u.getRole() == Role.APPLICANT).isEmpty()) {
             return new SubmissionResponse(
@@ -72,19 +74,32 @@ public class ApplicationProcessService {
             }
         }
 
-        JobApplication application = jobApplicationService.createCompleted(
-                applicantUserId,
-                vacancy,
-                resume
-        );
-        notificationService.notifyEmployer(application);
-        application = jobApplicationService.markEmployerNotified(application);
+        DefaultTransactionDefinition def = new DefaultTransactionDefinition();
+        def.setName("submitApplicationTx");
+        def.setPropagationBehavior(DefaultTransactionDefinition.PROPAGATION_REQUIRED);
+
+        TransactionStatus txStatus = transactionManager.getTransaction(def);
+        JobApplication application;
+        try {
+            JobApplication app = jobApplicationService.createCompleted(
+                    applicantUserId,
+                    vacancy,
+                    resume
+            );
+            notificationService.notifyEmployer(app);
+            application = jobApplicationService.markEmployerNotified(app);
+            transactionManager.commit(txStatus);
+        } catch (RuntimeException | Error ex) {
+            transactionManager.rollback(txStatus);
+            throw ex;
+        }
+
         ApplicationDto applicationDto = apiMapper.toDto(application);
 
         return new SubmissionResponse(
-                SubmissionOutcome.COMPLETED,
-                "Application successfully completed.",
-                applicationDto
+            SubmissionOutcome.COMPLETED,
+            "Application successfully completed.",
+            applicationDto
         );
 
     }
