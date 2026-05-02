@@ -34,7 +34,7 @@ public class CustomUserDetails implements UserDetails {
         return new CustomUserDetails(
                 account,
                 account.getId(),
-                account.getPhone(),
+                account.getEmail(),
                 account.getPasswordHash(),
                 account.getRole()
         );

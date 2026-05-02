@@ -1,11 +1,11 @@
 -- password for all seeded accounts: password (BCrypt)
 INSERT INTO user_accounts (id, phone, password_hash, role, email)
 VALUES
-    (1, '+10000000001', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'EMPLOYER', 'hr-backend@company.com'),
-    (2, '+10000000002', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'EMPLOYER', 'hr-qa@company.com'),
-    (3, '+10000000003', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'EMPLOYER', 'hr-analytics@company.com'),
-    (4, '+10000000101', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'APPLICANT', NULL),
-    (5, '+10000000102', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'APPLICANT', NULL);
+    (1, NULL, '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'EMPLOYER', 'hr-backend@company.com'),
+    (2, NULL, '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'EMPLOYER', 'hr-qa@company.com'),
+    (3, NULL, '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'EMPLOYER', 'hr-analytics@company.com'),
+    (4, NULL, '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'APPLICANT', 'ivan.petrov@example.com'),
+    (5, NULL, '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'APPLICANT', 'maria.sokolova@example.com');
 
 INSERT INTO vacancies (id, title, status, requires_test, employer_id)
 VALUES

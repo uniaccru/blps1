@@ -18,7 +18,7 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true, length = ValidationConstraints.PHONE_MAX_LENGTH)
+    @Column(unique = true, length = ValidationConstraints.PHONE_MAX_LENGTH)
     private String phone;
 
     @Column(nullable = false, length = ValidationConstraints.PASSWORD_HASH_MAX_LENGTH)
@@ -28,8 +28,8 @@ public class User {
     @Column(nullable = false, length = ValidationConstraints.ROLE_MAX_LENGTH)
     private Role role;
 
-    /** Для работодателя — логин по email и контакт; у соискателя обычно {@code null}. */
-    @Column(unique = true, length = ValidationConstraints.EMAIL_MAX_LENGTH)
+    /** Email — основной способ аутентификации для всех пользователей (employers и applicants). */
+    @Column(nullable = false, unique = true, length = ValidationConstraints.EMAIL_MAX_LENGTH)
     private String email;
 
     public Long getId() {

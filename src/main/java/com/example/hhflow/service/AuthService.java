@@ -9,13 +9,9 @@ import com.example.hhflow.exception.BusinessException;
 import com.example.hhflow.model.Role;
 import com.example.hhflow.model.User;
 import com.example.hhflow.repository.UserRepository;
-import com.example.hhflow.security.CustomUserDetails;
 import com.example.hhflow.security.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,57 +22,54 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
 
     @Transactional
     public AuthResponse registerEmployer(RegisterEmployerRequest request) {
-        if (userRepository.existsByPhone(request.getPhone())) {
-            throw new BusinessException("Phone already registered: " + request.getPhone());
-        }
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new BusinessException("Email already registered: " + request.getEmail());
         }
 
         User user = new User();
-        user.setPhone(request.getPhone().trim());
+        user.setEmail(request.getEmail().trim());
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         user.setRole(Role.EMPLOYER);
-        user.setEmail(request.getEmail().trim());
+        user.setPhone(null);
         userRepository.save(user);
 
-        User persisted = userRepository.findByPhone(user.getPhone())
+        User persisted = userRepository.findByEmail(user.getEmail())
                 .orElseThrow(() -> new IllegalStateException("User not persisted"));
         return tokensFor(persisted);
     }
 
     @Transactional
     public AuthResponse registerApplicant(RegisterApplicantRequest request) {
-        if (userRepository.existsByPhone(request.getPhone())) {
-            throw new BusinessException("Phone already registered: " + request.getPhone());
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new BusinessException("Email already registered: " + request.getEmail());
         }
 
         User user = new User();
-        user.setPhone(request.getPhone().trim());
+        user.setEmail(request.getEmail().trim());
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         user.setRole(Role.APPLICANT);
-        user.setEmail(null);
+        user.setPhone(null);
         userRepository.save(user);
 
-        User persisted = userRepository.findByPhone(user.getPhone())
+        User persisted = userRepository.findByEmail(user.getEmail())
                 .orElseThrow(() -> new IllegalStateException("User not persisted"));
         return tokensFor(persisted);
     }
 
     public AuthResponse login(LoginRequest request) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getUsername().trim(), request.getPassword()));
-        CustomUserDetails details = (CustomUserDetails) authentication.getPrincipal();
-        User loaded = details.getUser();
-        if (loaded == null) {
-            throw new IllegalStateException("Login must load full user from database");
+        String email = request.getEmail().trim();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new BadCredentialsException("Invalid email or password"));
+        
+        if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
+            throw new BadCredentialsException("Invalid email or password");
         }
-        return tokensFor(loaded);
+        
+        return tokensFor(user);
     }
 
     public AuthResponse refresh(RefreshTokenRequest request) {

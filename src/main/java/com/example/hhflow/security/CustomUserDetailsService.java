@@ -1,6 +1,5 @@
 package com.example.hhflow.security;
 
-import com.example.hhflow.model.Role;
 import com.example.hhflow.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -16,16 +15,8 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        String key = username.trim();
-
-        return userRepository.findByPhone(key)
-                .map(CustomUserDetails::fromUser)
-                .orElseGet(() -> loadByEmployerEmail(key));
-    }
-
-    private CustomUserDetails loadByEmployerEmail(String email) {
+        String email = username.trim();
         return userRepository.findByEmail(email)
-                .filter(u -> u.getRole() == Role.EMPLOYER)
                 .map(CustomUserDetails::fromUser)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
     }

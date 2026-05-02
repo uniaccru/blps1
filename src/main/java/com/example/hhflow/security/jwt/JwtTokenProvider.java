@@ -25,7 +25,7 @@ public class JwtTokenProvider {
     private static final String REFRESH = "REFRESH";
 
     private static final String CLAIM_ROLE = "role";
-    private static final String CLAIM_PHONE = "phone";
+    private static final String CLAIM_EMAIL = "email";
 
     private final JwtProperties jwtProperties;
 
@@ -54,7 +54,7 @@ public class JwtTokenProvider {
                 .setExpiration(expiry)
                 .claim(CLAIM_TYP, ACCESS)
                 .claim(CLAIM_ROLE, principal.getRole().name())
-                .claim(CLAIM_PHONE, account.getPhone())
+                .claim(CLAIM_EMAIL, account.getEmail())
                 .signWith(signingKey, SignatureAlgorithm.HS256)
                 .compact();
     }
@@ -79,9 +79,9 @@ public class JwtTokenProvider {
         }
         Long userId = Long.parseLong(claims.getSubject());
         Role role = Role.valueOf(claims.get(CLAIM_ROLE, String.class));
-        String phone = claims.get(CLAIM_PHONE, String.class);
+        String email = claims.get(CLAIM_EMAIL, String.class);
 
-        return CustomUserDetails.fromJwt(userId, phone, role);
+        return CustomUserDetails.fromJwt(userId, email, role);
     }
 
     public boolean isValidAccessToken(String token) {
