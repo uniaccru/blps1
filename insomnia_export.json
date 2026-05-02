@@ -8,7 +8,7 @@
       "_id": "wrk_hh_flow",
       "_type": "workspace",
       "name": "HH Flow API",
-      "description": "JWT + RBAC: после Login скопируйте accessToken в employer_token / applicant_token в окружении.",
+      "description": "JWT + RBAC: email-based authentication. После Login скопируйте accessToken в employer_token / applicant_token в окружении.",
       "parentId": null,
       "scope": "collection"
     },
@@ -19,12 +19,12 @@
       "name": "Base Environment",
       "data": {
         "base_url": "http://localhost:8080",
-        "employer_phone": "+10000000001",
         "employer_email": "hr-backend@company.com",
-        "applicant_phone": "+10000000101",
+        "applicant_email": "ivan.petrov@example.com",
         "password": "password",
         "employer_token": "",
         "applicant_token": "",
+        "refresh_token": "",
         "vacancy_id": "1",
         "employer_user_id": "1",
         "applicant_user_id": "4",
@@ -112,26 +112,7 @@
       "parameters": [],
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"username\": \"{{ _.employer_phone }}\",\n  \"password\": \"{{ _.password }}\"\n}"
-      }
-    },
-    {
-      "_id": "req_auth_login_employer_email",
-      "_type": "request",
-      "parentId": "fld_auth",
-      "name": "POST /auth/login (работодатель по email)",
-      "method": "POST",
-      "url": "{{ _.base_url }}/api/v1/auth/login",
-      "headers": [
-        {
-          "name": "Content-Type",
-          "value": "application/json"
-        }
-      ],
-      "parameters": [],
-      "body": {
-        "mimeType": "application/json",
-        "text": "{\n  \"username\": \"{{ _.employer_email }}\",\n  \"password\": \"{{ _.password }}\"\n}"
+        "text": "{\n  \"email\": \"{{ _.employer_email }}\",\n  \"password\": \"{{ _.password }}\"\n}"
       }
     },
     {
@@ -150,7 +131,7 @@
       "parameters": [],
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"username\": \"{{ _.applicant_phone }}\",\n  \"password\": \"{{ _.password }}\"\n}"
+        "text": "{\n  \"email\": \"{{ _.applicant_email }}\",\n  \"password\": \"{{ _.password }}\"\n}"
       }
     },
     {
@@ -169,7 +150,7 @@
       "parameters": [],
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"phone\": \"+79001234567\",\n  \"password\": \"password123\",\n  \"email\": \"unique-hr@example.com\"\n}"
+        "text": "{\n  \"email\": \"new-hr@example.com\",\n  \"password\": \"password123\"\n}"
       }
     },
     {
@@ -188,7 +169,26 @@
       "parameters": [],
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"phone\": \"+79007654321\",\n  \"password\": \"password123\"\n}"
+        "text": "{\n  \"email\": \"candidate@example.com\",\n  \"password\": \"password123\"\n}"
+      }
+    },
+    {
+      "_id": "req_auth_refresh",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "name": "POST /auth/refresh (обновление access token)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/v1/auth/refresh",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "parameters": [],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"refreshToken\": \"{{ _.refresh_token }}\"\n}"
       }
     },
     {
@@ -236,22 +236,6 @@
         "mimeType": "application/json",
         "text": "{\n  \"status\": \"ARCHIVED\"\n}"
       }
-    },
-    {
-      "_id": "req_emp_get_employers",
-      "_type": "request",
-      "parentId": "fld_employer",
-      "name": "GET /employers",
-      "method": "GET",
-      "url": "{{ _.base_url }}/api/v1/employers",
-      "headers": [
-        {
-          "name": "Authorization",
-          "value": "Bearer {{ _.employer_token }}"
-        }
-      ],
-      "parameters": [],
-      "body": {}
     },
     {
       "_id": "req_emp_get_applications",
