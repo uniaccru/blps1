@@ -36,8 +36,8 @@ public class ApplicationController {
 
     @PostMapping("/submit")
     public SubmissionResponse submit(@Valid @RequestBody SubmitApplicationRequest request) {
-        Long applicantId = SecurityUtils.requireApplicant().getApplicantId();
-        return applicationProcessService.submitApplication(request, applicantId);
+        Long applicantUserId = SecurityUtils.requireApplicant().getUserId();
+        return applicationProcessService.submitApplication(request, applicantUserId);
     }
 
     @GetMapping
@@ -45,14 +45,14 @@ public class ApplicationController {
             @RequestParam(defaultValue = ValidationConstraints.PAGE_DEFAULT_VALUE) @Min(value = ValidationConstraints.PAGE_MIN, message = "must be greater than or equal to {value}") int page,
             @RequestParam(defaultValue = ValidationConstraints.SIZE_DEFAULT_VALUE) @Min(value = ValidationConstraints.SIZE_MIN, message = "must be at least {value}") @Max(value = ValidationConstraints.SIZE_MAX, message = "must be at most {value}") int size
     ) {
-        Long employerId = SecurityUtils.requireEmployer().getEmployerId();
-        return PageResponse.from(jobApplicationService.findForEmployer(employerId, PageRequest.of(page, size, Sort.by("id").ascending()))
+        Long employerUserId = SecurityUtils.requireEmployer().getUserId();
+        return PageResponse.from(jobApplicationService.findForEmployer(employerUserId, PageRequest.of(page, size, Sort.by("id").ascending()))
                 .map(apiMapper::toDto));
     }
 
     @GetMapping("/{id}")
     public ApplicationDto getById(@PathVariable @Min(value = ValidationConstraints.ID_MIN, message = "must be a positive number") Long id) {
-        Long employerId = SecurityUtils.requireEmployer().getEmployerId();
-        return apiMapper.toDto(jobApplicationService.getForEmployer(id, employerId));
+        Long employerUserId = SecurityUtils.requireEmployer().getUserId();
+        return apiMapper.toDto(jobApplicationService.getForEmployer(id, employerUserId));
     }
 }

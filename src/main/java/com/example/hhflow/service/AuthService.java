@@ -6,13 +6,9 @@ import com.example.hhflow.dto.request.RegisterApplicantRequest;
 import com.example.hhflow.dto.request.RegisterEmployerRequest;
 import com.example.hhflow.dto.response.AuthResponse;
 import com.example.hhflow.exception.BusinessException;
-import com.example.hhflow.model.Applicant;
-import com.example.hhflow.model.Employer;
 import com.example.hhflow.model.Role;
-import com.example.hhflow.model.UserAccount;
-import com.example.hhflow.repository.EmployerRepository;
-import com.example.hhflow.repository.ApplicantRepository;
-import com.example.hhflow.repository.UserAccountRepository;
+import com.example.hhflow.model.User;
+import com.example.hhflow.repository.UserRepository;
 import com.example.hhflow.security.CustomUserDetails;
 import com.example.hhflow.security.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
@@ -28,57 +24,47 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class AuthService {
 
-    private final UserAccountRepository userAccountRepository;
-    private final EmployerRepository employerRepository;
-    private final ApplicantRepository applicantRepository;
+    private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
 
     @Transactional
     public AuthResponse registerEmployer(RegisterEmployerRequest request) {
-        if (userAccountRepository.existsByPhone(request.getPhone())) {
+        if (userRepository.existsByPhone(request.getPhone())) {
             throw new BusinessException("Phone already registered: " + request.getPhone());
         }
-        if (employerRepository.findByEmail(request.getEmail()).isPresent()) {
-            throw new BusinessException("Employer already exists with email: " + request.getEmail());
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new BusinessException("Email already registered: " + request.getEmail());
         }
 
-        Employer employer = new Employer();
-        employer.setEmail(request.getEmail());
-        employer = employerRepository.save(employer);
+        User user = new User();
+        user.setPhone(request.getPhone().trim());
+        user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+        user.setRole(Role.EMPLOYER);
+        user.setEmail(request.getEmail().trim());
+        userRepository.save(user);
 
-        UserAccount account = new UserAccount();
-        account.setPhone(request.getPhone().trim());
-        account.setPasswordHash(passwordEncoder.encode(request.getPassword()));
-        account.setRole(Role.EMPLOYER);
-        account.setEmployer(employer);
-        account.setApplicant(null);
-        userAccountRepository.save(account);
-
-        UserAccount persisted = userAccountRepository.findByPhone(account.getPhone())
-                .orElseThrow(() -> new IllegalStateException("User account not persisted"));
+        User persisted = userRepository.findByPhone(user.getPhone())
+                .orElseThrow(() -> new IllegalStateException("User not persisted"));
         return tokensFor(persisted);
     }
 
     @Transactional
     public AuthResponse registerApplicant(RegisterApplicantRequest request) {
-        if (userAccountRepository.existsByPhone(request.getPhone())) {
+        if (userRepository.existsByPhone(request.getPhone())) {
             throw new BusinessException("Phone already registered: " + request.getPhone());
         }
 
-        Applicant applicant = applicantRepository.save(new Applicant());
+        User user = new User();
+        user.setPhone(request.getPhone().trim());
+        user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+        user.setRole(Role.APPLICANT);
+        user.setEmail(null);
+        userRepository.save(user);
 
-        UserAccount account = new UserAccount();
-        account.setPhone(request.getPhone().trim());
-        account.setPasswordHash(passwordEncoder.encode(request.getPassword()));
-        account.setRole(Role.APPLICANT);
-        account.setEmployer(null);
-        account.setApplicant(applicant);
-        userAccountRepository.save(account);
-
-        UserAccount persisted = userAccountRepository.findByPhone(account.getPhone())
-                .orElseThrow(() -> new IllegalStateException("User account not persisted"));
+        User persisted = userRepository.findByPhone(user.getPhone())
+                .orElseThrow(() -> new IllegalStateException("User not persisted"));
         return tokensFor(persisted);
     }
 
@@ -86,7 +72,11 @@ public class AuthService {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getUsername().trim(), request.getPassword()));
         CustomUserDetails details = (CustomUserDetails) authentication.getPrincipal();
-        return tokensFor(details.getUserAccount());
+        User loaded = details.getUser();
+        if (loaded == null) {
+            throw new IllegalStateException("Login must load full user from database");
+        }
+        return tokensFor(loaded);
     }
 
     public AuthResponse refresh(RefreshTokenRequest request) {
@@ -94,15 +84,13 @@ public class AuthService {
         if (!jwtTokenProvider.isValidRefreshToken(raw)) {
             throw new BadCredentialsException("Invalid refresh token");
         }
-        long accountId = jwtTokenProvider.parseRefreshAccountId(raw);
-        UserAccount stub = userAccountRepository.findById(accountId)
+        long userId = jwtTokenProvider.parseRefreshAccountId(raw);
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BadCredentialsException("Invalid refresh token"));
-        UserAccount full = userAccountRepository.findByPhone(stub.getPhone())
-                .orElseThrow(() -> new BadCredentialsException("Invalid refresh token"));
-        return tokensFor(full);
+        return tokensFor(user);
     }
 
-    private AuthResponse tokensFor(UserAccount account) {
+    private AuthResponse tokensFor(User account) {
         return new AuthResponse(
                 jwtTokenProvider.createAccessToken(account),
                 jwtTokenProvider.createRefreshToken(account),

@@ -23,13 +23,13 @@ public class JobApplicationService {
     private final JobApplicationRepository jobApplicationRepository;
     private final Clock clock;
 
-    public JobApplication createCompleted(Long candidateId, Vacancy vacancy, Resume resume) {
-        if (!resume.getApplicant().getId().equals(candidateId)) {
-            throw new BusinessException("Resume does not belong to candidate: " + candidateId);
+    public JobApplication createCompleted(Long candidateUserId, Vacancy vacancy, Resume resume) {
+        if (!resume.getOwner().getId().equals(candidateUserId)) {
+            throw new BusinessException("Resume does not belong to candidate: " + candidateUserId);
         }
 
         JobApplication application = new JobApplication();
-        application.setApplicant(resume.getApplicant());
+        application.setApplicant(resume.getOwner());
         application.setVacancy(vacancy);
         application.setResume(resume);
         application.setStatus(ApplicationStatus.COMPLETED);
@@ -42,8 +42,8 @@ public class JobApplicationService {
     }
 
     @Transactional(readOnly = true)
-    public Page<JobApplication> findForEmployer(Long employerId, Pageable pageable) {
-        return jobApplicationRepository.findByVacancy_Employer_Id(employerId, pageable);
+    public Page<JobApplication> findForEmployer(Long employerUserId, Pageable pageable) {
+        return jobApplicationRepository.findByVacancy_Employer_Id(employerUserId, pageable);
     }
 
     public JobApplication getById(Long id) {
@@ -52,9 +52,9 @@ public class JobApplicationService {
     }
 
     @Transactional(readOnly = true)
-    public JobApplication getForEmployer(Long applicationId, Long employerId) {
+    public JobApplication getForEmployer(Long applicationId, Long employerUserId) {
         JobApplication application = getById(applicationId);
-        if (!application.getVacancy().getEmployer().getId().equals(employerId)) {
+        if (!application.getVacancy().getEmployer().getId().equals(employerUserId)) {
             throw new BusinessException("Application does not belong to this employer's vacancies");
         }
         return application;

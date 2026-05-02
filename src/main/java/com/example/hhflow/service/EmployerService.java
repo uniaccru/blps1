@@ -1,10 +1,9 @@
 package com.example.hhflow.service;
 
 import com.example.hhflow.exception.NotFoundException;
-import com.example.hhflow.model.Employer;
-import com.example.hhflow.repository.EmployerRepository;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import com.example.hhflow.model.Role;
+import com.example.hhflow.model.User;
+import com.example.hhflow.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -12,14 +11,14 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class EmployerService {
 
-    private final EmployerRepository employerRepository;
+    private final UserRepository userRepository;
 
-    public Page<Employer> findAll(Pageable pageable) {
-        return employerRepository.findAll(pageable);
-    }
-
-    public Employer getById(Long id) {
-        return employerRepository.findById(id)
+    public User getEmployerUser(Long id) {
+        User user = userRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Employer not found: " + id));
+        if (user.getRole() != Role.EMPLOYER) {
+            throw new NotFoundException("Employer not found: " + id);
+        }
+        return user;
     }
 }

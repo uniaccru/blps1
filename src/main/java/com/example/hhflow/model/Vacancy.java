@@ -32,7 +32,7 @@ public class Vacancy {
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "employer_id", nullable = false)
-    private Employer employer;
+    private User employer;
 
     public Long getId() {
         return id;
@@ -66,11 +66,11 @@ public class Vacancy {
         this.requiresTest = requiresTest;
     }
 
-    public Employer getEmployer() {
+    public User getEmployer() {
         return employer;
     }
 
-    public void setEmployer(Employer employer) {
+    public void setEmployer(User employer) {
         this.employer = employer;
     }
 }

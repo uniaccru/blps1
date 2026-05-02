@@ -1,7 +1,7 @@
 package com.example.hhflow.security.jwt;
 
 import com.example.hhflow.model.Role;
-import com.example.hhflow.model.UserAccount;
+import com.example.hhflow.model.User;
 import com.example.hhflow.security.CustomUserDetails;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
@@ -26,8 +26,6 @@ public class JwtTokenProvider {
 
     private static final String CLAIM_ROLE = "role";
     private static final String CLAIM_PHONE = "phone";
-    private static final String CLAIM_EMPLOYER_ID = "employerId";
-    private static final String CLAIM_APPLICANT_ID = "applicantId";
 
     private final JwtProperties jwtProperties;
 
@@ -45,31 +43,24 @@ public class JwtTokenProvider {
         signingKey = Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public String createAccessToken(UserAccount account) {
-        CustomUserDetails principal = CustomUserDetails.fromUserAccount(account);
+    public String createAccessToken(User account) {
+        CustomUserDetails principal = CustomUserDetails.fromUser(account);
         Date now = new Date();
         Date expiry = new Date(now.getTime() + jwtProperties.getExpiration().toMillis());
 
-        io.jsonwebtoken.JwtBuilder builder = Jwts.builder()
-                .setSubject(String.valueOf(principal.getAccountId()))
+        return Jwts.builder()
+                .setSubject(String.valueOf(principal.getUserId()))
                 .setIssuedAt(now)
                 .setExpiration(expiry)
                 .claim(CLAIM_TYP, ACCESS)
                 .claim(CLAIM_ROLE, principal.getRole().name())
-                .claim(CLAIM_PHONE, account.getPhone());
-
-        if (principal.getEmployerId() != null) {
-            builder.claim(CLAIM_EMPLOYER_ID, principal.getEmployerId());
-        }
-        if (principal.getApplicantId() != null) {
-            builder.claim(CLAIM_APPLICANT_ID, principal.getApplicantId());
-        }
-
-        return builder.signWith(signingKey, SignatureAlgorithm.HS256).compact();
+                .claim(CLAIM_PHONE, account.getPhone())
+                .signWith(signingKey, SignatureAlgorithm.HS256)
+                .compact();
     }
 
     /** Минимальный refresh: только id аккаунта и тип (без ролей в claims). */
-    public String createRefreshToken(UserAccount account) {
+    public String createRefreshToken(User account) {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + jwtProperties.getRefreshExpiration().toMillis());
         return Jwts.builder()
@@ -86,13 +77,11 @@ public class JwtTokenProvider {
         if (REFRESH.equals(claims.get(CLAIM_TYP, String.class))) {
             throw new JwtException("Refresh token cannot be used as access token");
         }
-        Long accountId = Long.parseLong(claims.getSubject());
+        Long userId = Long.parseLong(claims.getSubject());
         Role role = Role.valueOf(claims.get(CLAIM_ROLE, String.class));
         String phone = claims.get(CLAIM_PHONE, String.class);
-        Long employerId = claims.get(CLAIM_EMPLOYER_ID, Long.class);
-        Long applicantId = claims.get(CLAIM_APPLICANT_ID, Long.class);
 
-        return CustomUserDetails.fromJwt(accountId, phone, role, employerId, applicantId);
+        return CustomUserDetails.fromJwt(userId, phone, role);
     }
 
     public boolean isValidAccessToken(String token) {

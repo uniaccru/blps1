@@ -24,7 +24,7 @@ public class JobApplication {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "applicant_id", nullable = false)
-    private Applicant applicant;
+    private User applicant;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "vacancy_id", nullable = false)
@@ -52,11 +52,11 @@ public class JobApplication {
         this.id = id;
     }
 
-    public Applicant getApplicant() {
+    public User getApplicant() {
         return applicant;
     }
 
-    public void setApplicant(Applicant applicant) {
+    public void setApplicant(User applicant) {
         this.applicant = applicant;
     }
 

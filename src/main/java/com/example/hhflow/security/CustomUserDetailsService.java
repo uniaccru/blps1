@@ -1,8 +1,7 @@
 package com.example.hhflow.security;
 
-import com.example.hhflow.model.UserAccount;
-import com.example.hhflow.repository.EmployerRepository;
-import com.example.hhflow.repository.UserAccountRepository;
+import com.example.hhflow.model.Role;
+import com.example.hhflow.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -13,22 +12,21 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
 
-    private final UserAccountRepository userAccountRepository;
-    private final EmployerRepository employerRepository;
+    private final UserRepository userRepository;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         String key = username.trim();
 
-        return userAccountRepository.findByPhone(key)
-                .map(CustomUserDetails::fromUserAccount)
+        return userRepository.findByPhone(key)
+                .map(CustomUserDetails::fromUser)
                 .orElseGet(() -> loadByEmployerEmail(key));
     }
 
     private CustomUserDetails loadByEmployerEmail(String email) {
-        return employerRepository.findByEmail(email)
-                .flatMap(e -> userAccountRepository.findByEmployer_Id(e.getId()))
-                .map(CustomUserDetails::fromUserAccount)
+        return userRepository.findByEmail(email)
+                .filter(u -> u.getRole() == Role.EMPLOYER)
+                .map(CustomUserDetails::fromUser)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
     }
 }

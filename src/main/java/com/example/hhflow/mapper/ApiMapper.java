@@ -4,9 +4,9 @@ import com.example.hhflow.dto.response.ApplicationDto;
 import com.example.hhflow.dto.response.EmployerDto;
 import com.example.hhflow.dto.response.ResumeDto;
 import com.example.hhflow.dto.response.VacancyDto;
-import com.example.hhflow.model.Employer;
 import com.example.hhflow.model.JobApplication;
 import com.example.hhflow.model.Resume;
+import com.example.hhflow.model.User;
 import com.example.hhflow.model.Vacancy;
 
 import org.springframework.stereotype.Component;
@@ -14,10 +14,10 @@ import org.springframework.stereotype.Component;
 @Component
 public class ApiMapper {
 
-    public EmployerDto toDto(Employer employer) {
+    public EmployerDto toDto(User employerUser) {
         return new EmployerDto(
-                employer.getId(),
-                employer.getEmail()
+                employerUser.getId(),
+                employerUser.getEmail()
         );
     }
 
@@ -34,7 +34,7 @@ public class ApiMapper {
     public ResumeDto toDto(Resume resume) {
         return new ResumeDto(
                 resume.getId(),
-            resume.getApplicant().getId(),
+                resume.getOwner().getId(),
                 resume.getFullName(),
                 resume.getSummary(),
                 resume.getCreatedAt()
@@ -46,7 +46,7 @@ public class ApiMapper {
                 application.getId(),
                 application.getVacancy().getId(),
                 application.getResume().getId(),
-            application.getApplicant().getId(),
+                application.getApplicant().getId(),
                 application.getStatus(),
                 application.getCreatedAt(),
                 application.getEmployerNotifiedAt()

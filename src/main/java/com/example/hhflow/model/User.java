@@ -5,17 +5,14 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
 @Entity
 @Table(name = "user_accounts")
-public class UserAccount {
+public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,13 +28,9 @@ public class UserAccount {
     @Column(nullable = false, length = ValidationConstraints.ROLE_MAX_LENGTH)
     private Role role;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "employer_id")
-    private Employer employer;
-
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "applicant_id")
-    private Applicant applicant;
+    /** Для работодателя — логин по email и контакт; у соискателя обычно {@code null}. */
+    @Column(unique = true, length = ValidationConstraints.EMAIL_MAX_LENGTH)
+    private String email;
 
     public Long getId() {
         return id;
@@ -71,19 +64,11 @@ public class UserAccount {
         this.role = role;
     }
 
-    public Employer getEmployer() {
-        return employer;
+    public String getEmail() {
+        return email;
     }
 
-    public void setEmployer(Employer employer) {
-        this.employer = employer;
-    }
-
-    public Applicant getApplicant() {
-        return applicant;
-    }
-
-    public void setApplicant(Applicant applicant) {
-        this.applicant = applicant;
+    public void setEmail(String email) {
+        this.email = email;
     }
 }

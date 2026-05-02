@@ -36,20 +36,20 @@ public class ResumeController {
             @RequestParam(defaultValue = ValidationConstraints.PAGE_DEFAULT_VALUE) @Min(value = ValidationConstraints.PAGE_MIN, message = "must be greater than or equal to {value}") int page,
             @RequestParam(defaultValue = ValidationConstraints.SIZE_DEFAULT_VALUE) @Min(value = ValidationConstraints.SIZE_MIN, message = "must be at least {value}") @Max(value = ValidationConstraints.SIZE_MAX, message = "must be at most {value}") int size
     ) {
-        Long applicantId = SecurityUtils.requireApplicant().getApplicantId();
-        return PageResponse.from(resumeService.findAllForApplicant(applicantId, PageRequest.of(page, size, Sort.by("id").ascending()))
+        Long applicantUserId = SecurityUtils.requireApplicant().getUserId();
+        return PageResponse.from(resumeService.findAllForApplicant(applicantUserId, PageRequest.of(page, size, Sort.by("id").ascending()))
                 .map(apiMapper::toDto));
     }
 
     @GetMapping("/{id}")
     public ResumeDto getById(@PathVariable @Min(value = ValidationConstraints.ID_MIN, message = "must be a positive number") Long id) {
-        Long applicantId = SecurityUtils.requireApplicant().getApplicantId();
-        return apiMapper.toDto(resumeService.getByIdAndApplicant(id, applicantId));
+        Long applicantUserId = SecurityUtils.requireApplicant().getUserId();
+        return apiMapper.toDto(resumeService.getByIdAndApplicant(id, applicantUserId));
     }
 
     @PostMapping
     public ResumeDto create(@Valid @RequestBody CreateResumeRequest request) {
-        Long applicantId = SecurityUtils.requireApplicant().getApplicantId();
-        return apiMapper.toDto(resumeService.create(request, applicantId));
+        Long applicantUserId = SecurityUtils.requireApplicant().getUserId();
+        return apiMapper.toDto(resumeService.create(request, applicantUserId));
     }
 }

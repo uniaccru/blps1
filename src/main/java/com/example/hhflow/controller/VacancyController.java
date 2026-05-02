@@ -49,13 +49,13 @@ public class VacancyController {
 
     @PostMapping
     public VacancyDto create(@Valid @RequestBody CreateVacancyRequest request) {
-        Long employerId = SecurityUtils.requireEmployer().getEmployerId();
-        return apiMapper.toDto(vacancyService.create(request, employerId));
+        Long employerUserId = SecurityUtils.requireEmployer().getUserId();
+        return apiMapper.toDto(vacancyService.create(request, employerUserId));
     }
 
     @PatchMapping("/{id}/status")
     public VacancyDto updateStatus(@PathVariable @Min(value = ValidationConstraints.ID_MIN, message = "must be a positive number") Long id, @Valid @RequestBody VacancyStatusUpdateRequest request) {
-        Long employerId = SecurityUtils.requireEmployer().getEmployerId();
-        return apiMapper.toDto(vacancyService.updateStatus(id, request.getStatus(), employerId));
+        Long employerUserId = SecurityUtils.requireEmployer().getUserId();
+        return apiMapper.toDto(vacancyService.updateStatus(id, request.getStatus(), employerUserId));
     }
 }

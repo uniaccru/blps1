@@ -3,7 +3,7 @@ package com.example.hhflow.controller;
 import com.example.hhflow.dto.response.EmployerDto;
 import com.example.hhflow.dto.response.PageResponse;
 import com.example.hhflow.mapper.ApiMapper;
-import com.example.hhflow.model.Employer;
+import com.example.hhflow.model.User;
 import com.example.hhflow.security.SecurityUtils;
 import com.example.hhflow.service.EmployerService;
 import com.example.hhflow.validation.ValidationConstraints;
@@ -37,19 +37,19 @@ public class EmployerController {
             @RequestParam(defaultValue = ValidationConstraints.PAGE_DEFAULT_VALUE) @Min(value = ValidationConstraints.PAGE_MIN, message = "must be greater than or equal to {value}") int page,
             @RequestParam(defaultValue = ValidationConstraints.SIZE_DEFAULT_VALUE) @Min(value = ValidationConstraints.SIZE_MIN, message = "must be at least {value}") @Max(value = ValidationConstraints.SIZE_MAX, message = "must be at most {value}") int size
     ) {
-        Long employerId = SecurityUtils.requireEmployer().getEmployerId();
-        Employer employer = employerService.getById(employerId);
+        Long employerUserId = SecurityUtils.requireEmployer().getUserId();
+        User employer = employerService.getEmployerUser(employerUserId);
         PageRequest pageable = PageRequest.of(page, size, Sort.by("id").ascending());
-        Page<Employer> single = new PageImpl<>(Collections.singletonList(employer), pageable, 1);
+        Page<User> single = new PageImpl<>(Collections.singletonList(employer), pageable, 1);
         return PageResponse.from(single.map(apiMapper::toDto));
     }
 
     @GetMapping("/{id}")
     public EmployerDto getById(@PathVariable @Min(value = ValidationConstraints.ID_MIN, message = "must be a positive number") Long id) {
-        Long employerId = SecurityUtils.requireEmployer().getEmployerId();
-        if (!employerId.equals(id)) {
+        Long employerUserId = SecurityUtils.requireEmployer().getUserId();
+        if (!employerUserId.equals(id)) {
             throw new AccessDeniedException("Access to this employer profile is denied");
         }
-        return apiMapper.toDto(employerService.getById(id));
+        return apiMapper.toDto(employerService.getEmployerUser(id));
     }
 }

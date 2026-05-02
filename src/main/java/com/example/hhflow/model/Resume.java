@@ -21,8 +21,8 @@ public class Resume {
     private Long id;
 
     @ManyToOne(optional = false)
-    @JoinColumn(name = "applicant_id", nullable = false, unique = true)
-    private Applicant applicant;
+    @JoinColumn(name = "user_id", nullable = false, unique = true)
+    private User owner;
 
     @Column(nullable = false, length = ValidationConstraints.FULL_NAME_MAX_LENGTH)
     private String fullName;
@@ -41,12 +41,12 @@ public class Resume {
         this.id = id;
     }
 
-    public Applicant getApplicant() {
-        return applicant;
+    public User getOwner() {
+        return owner;
     }
 
-    public void setApplicant(Applicant applicant) {
-        this.applicant = applicant;
+    public void setOwner(User owner) {
+        this.owner = owner;
     }
 
     public String getFullName() {

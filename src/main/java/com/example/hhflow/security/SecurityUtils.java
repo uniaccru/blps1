@@ -20,7 +20,7 @@ public final class SecurityUtils {
 
     public static CustomUserDetails requireApplicant() {
         CustomUserDetails p = requirePrincipal();
-        if (p.getRole() != Role.APPLICANT || p.getApplicantId() == null) {
+        if (p.getRole() != Role.APPLICANT) {
             throw new AccessDeniedException("Applicant role required");
         }
         return p;
@@ -28,7 +28,7 @@ public final class SecurityUtils {
 
     public static CustomUserDetails requireEmployer() {
         CustomUserDetails p = requirePrincipal();
-        if (p.getRole() != Role.EMPLOYER || p.getEmployerId() == null) {
+        if (p.getRole() != Role.EMPLOYER) {
             throw new AccessDeniedException("Employer role required");
         }
         return p;

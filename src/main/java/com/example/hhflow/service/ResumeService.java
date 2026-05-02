@@ -3,10 +3,11 @@ package com.example.hhflow.service;
 import com.example.hhflow.dto.request.CreateResumeRequest;
 import com.example.hhflow.exception.BusinessException;
 import com.example.hhflow.exception.NotFoundException;
-import com.example.hhflow.model.Applicant;
 import com.example.hhflow.model.Resume;
-import com.example.hhflow.repository.ApplicantRepository;
+import com.example.hhflow.model.Role;
+import com.example.hhflow.model.User;
 import com.example.hhflow.repository.ResumeRepository;
+import com.example.hhflow.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,36 +23,37 @@ import java.util.Optional;
 public class ResumeService {
 
     private final ResumeRepository resumeRepository;
-    private final ApplicantRepository applicantRepository;
+    private final UserRepository userRepository;
     private final Clock clock;
 
-    public Page<Resume> findAllForApplicant(Long applicantId, Pageable pageable) {
-        return resumeRepository.findByApplicant_Id(applicantId, pageable);
+    public Page<Resume> findAllForApplicant(Long applicantUserId, Pageable pageable) {
+        return resumeRepository.findByOwner_Id(applicantUserId, pageable);
     }
 
-    public Resume getByIdAndApplicant(Long id, Long applicantId) {
+    public Resume getByIdAndApplicant(Long id, Long applicantUserId) {
         Resume resume = resumeRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Resume not found: " + id));
-        if (!resume.getApplicant().getId().equals(applicantId)) {
-            throw new BusinessException("Resume does not belong to candidate: " + applicantId);
+        if (!resume.getOwner().getId().equals(applicantUserId)) {
+            throw new BusinessException("Resume does not belong to candidate: " + applicantUserId);
         }
         return resume;
     }
 
-    public Optional<Resume> findByCandidateId(Long candidateId) {
-        return resumeRepository.findByApplicantId(candidateId);
+    public Optional<Resume> findByCandidateId(Long candidateUserId) {
+        return resumeRepository.findByOwner_Id(candidateUserId);
     }
 
     @Transactional
-    public Resume createForApplicant(Long applicantId, String fullName, String summary) {
-        if (resumeRepository.findByApplicantId(applicantId).isPresent()) {
-            throw new BusinessException("Resume already exists for candidate: " + applicantId);
+    public Resume createForApplicant(Long applicantUserId, String fullName, String summary) {
+        if (resumeRepository.findByOwner_Id(applicantUserId).isPresent()) {
+            throw new BusinessException("Resume already exists for candidate: " + applicantUserId);
         }
-        Applicant applicant = applicantRepository.findById(applicantId)
-                .orElseThrow(() -> new NotFoundException("Applicant not found: " + applicantId));
+        User owner = userRepository.findById(applicantUserId)
+                .filter(u -> u.getRole() == Role.APPLICANT)
+                .orElseThrow(() -> new NotFoundException("Applicant not found: " + applicantUserId));
 
         Resume resume = new Resume();
-        resume.setApplicant(applicant);
+        resume.setOwner(owner);
         resume.setFullName(fullName);
         resume.setSummary(summary);
         resume.setCreatedAt(OffsetDateTime.now(clock));
@@ -59,7 +61,7 @@ public class ResumeService {
     }
 
     @Transactional
-    public Resume create(CreateResumeRequest request, Long applicantId) {
-        return createForApplicant(applicantId, request.getFullName(), request.getSummary());
+    public Resume create(CreateResumeRequest request, Long applicantUserId) {
+        return createForApplicant(applicantUserId, request.getFullName(), request.getSummary());
     }
 }

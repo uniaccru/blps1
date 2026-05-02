@@ -7,7 +7,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ResumeRepository extends JpaRepository<Resume, Long> {
-    Optional<Resume> findByApplicantId(Long applicantId);
 
-    Page<Resume> findByApplicant_Id(Long applicantId, Pageable pageable);
+    Optional<Resume> findByOwner_Id(Long ownerId);
+
+    Page<Resume> findByOwner_Id(Long ownerId, Pageable pageable);
 }

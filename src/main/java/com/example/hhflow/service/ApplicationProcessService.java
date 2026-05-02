@@ -6,9 +6,11 @@ import com.example.hhflow.dto.response.SubmissionResponse;
 import com.example.hhflow.mapper.ApiMapper;
 import com.example.hhflow.model.JobApplication;
 import com.example.hhflow.model.Resume;
+import com.example.hhflow.model.Role;
 import com.example.hhflow.model.SubmissionOutcome;
 import com.example.hhflow.model.Vacancy;
 import com.example.hhflow.model.VacancyStatus;
+import com.example.hhflow.repository.UserRepository;
 import com.example.hhflow.service.subprocess.ResumeCreationSubprocessService;
 import com.example.hhflow.service.subprocess.TestSubprocessService;
 import lombok.RequiredArgsConstructor;
@@ -25,17 +27,17 @@ public class ApplicationProcessService {
     private final ResumeService resumeService;
     private final JobApplicationService jobApplicationService;
     private final NotificationService notificationService;
-    private final ApplicantService applicantService;
+    private final UserRepository userRepository;
     private final ResumeCreationSubprocessService resumeCreationSubprocessService;
     private final TestSubprocessService testSubprocessService;
     private final ApiMapper apiMapper;
 
     @Transactional
-    public SubmissionResponse submitApplication(SubmitApplicationRequest request, Long applicantId) {
-        if (!applicantService.existsById(applicantId)) {
+    public SubmissionResponse submitApplication(SubmitApplicationRequest request, Long applicantUserId) {
+        if (userRepository.findById(applicantUserId).filter(u -> u.getRole() == Role.APPLICANT).isEmpty()) {
             return new SubmissionResponse(
                     SubmissionOutcome.REGISTRATION_FAILED,
-                    "Applicant profile is missing for this account.",
+                    "Applicant account not found or invalid role.",
                     null
             );
         }
@@ -49,7 +51,7 @@ public class ApplicationProcessService {
             );
         }
 
-        Optional<Resume> resumeOptional = resolveResume(request, applicantId);
+        Optional<Resume> resumeOptional = resolveResume(request, applicantUserId);
         if (resumeOptional.isEmpty()) {
             return new SubmissionResponse(
                 SubmissionOutcome.RESUME_CREATION_FAILED,
@@ -60,7 +62,7 @@ public class ApplicationProcessService {
         Resume resume = resumeOptional.get();
 
         if (vacancy.isRequiresTest()) {
-            boolean testPassed = testSubprocessService.passTest(applicantId, request.getVacancyId());
+            boolean testPassed = testSubprocessService.passTest(applicantUserId, request.getVacancyId());
             if (!testPassed) {
                 return new SubmissionResponse(
                         SubmissionOutcome.AUTO_REJECTED,
@@ -71,7 +73,7 @@ public class ApplicationProcessService {
         }
 
         JobApplication application = jobApplicationService.createCompleted(
-                applicantId,
+                applicantUserId,
                 vacancy,
                 resume
         );
@@ -87,19 +89,19 @@ public class ApplicationProcessService {
 
     }
 
-    private Optional<Resume> resolveResume(SubmitApplicationRequest request, Long applicantId) {
+    private Optional<Resume> resolveResume(SubmitApplicationRequest request, Long applicantUserId) {
         if (request.getResumeId() != null) {
-            return Optional.of(resumeService.getByIdAndApplicant(request.getResumeId(), applicantId));
+            return Optional.of(resumeService.getByIdAndApplicant(request.getResumeId(), applicantUserId));
         }
 
-        return resumeService.findByCandidateId(applicantId)
+        return resumeService.findByCandidateId(applicantUserId)
                 .map(Optional::of)
-                .orElseGet(() -> createResumeViaSubprocess(request, applicantId));
+                .orElseGet(() -> createResumeViaSubprocess(request, applicantUserId));
     }
 
-    private Optional<Resume> createResumeViaSubprocess(SubmitApplicationRequest request, Long applicantId) {
+    private Optional<Resume> createResumeViaSubprocess(SubmitApplicationRequest request, Long applicantUserId) {
         return resumeCreationSubprocessService.createResume(
-                applicantId,
+                applicantUserId,
                 request.getResumeFullName(),
                 request.getResumeSummary()
         );
