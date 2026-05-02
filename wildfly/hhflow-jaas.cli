@@ -1,0 +1,17 @@
+# Минимальная настройка JAAS на WildFly: пользователи из БД (таблица jaas_identity).
+# Не трогает Spring Security / JWT — домен просто существует в контейнере.
+#
+# Условия:
+#   1) Выполнить wildfly/jaas-schema.sql в той же БД (или другой — поправьте datasource).
+#   2) В WildFly уже есть datasource с JNDI java:jboss/datasources/HhFlowDS
+#      (или замените dsJndiName в login-module ниже).
+#   3) Нужен legacy subsystem security (часто уже есть в standalone-full.xml).
+#      Если нет — используйте профиль с extension org.jboss.as.security или см. доку WildFly.
+#
+# Запуск: $WILDFLY_HOME/bin/jboss-cli.sh -c --file=wildfly/hhflow-jaas.cli
+
+/subsystem=security/security-domain=hhflowJaas:add(cache-type=default)
+
+/subsystem=security/security-domain=hhflowJaas/authentication=classic:add(login-modules=[{"code" => "Database","flag" => "required","module-options" => [("dsJndiName" => "java:jboss/datasources/HhFlowDS"),("principalsQuery" => "SELECT password FROM jaas_identity WHERE username=?"),("rolesQuery" => "SELECT roles, 'Roles' FROM jaas_identity WHERE username=?"),("hashAlgorithm" => "MD5"),("hashEncoding" => "hex"),("hashCharset" => "UTF-8")]}])
+
+/subsystem=undertow/application-security-domain=hhflowJaas:add(security-domain=hhflowJaas)

@@ -5,10 +5,14 @@ import javax.servlet.http.HttpServletRequest;
 import javax.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
 import java.time.OffsetDateTime;
@@ -33,6 +37,20 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), request.getRequestURI());
     }
 
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ErrorResponse> handleAuthentication(AuthenticationException ex, HttpServletRequest request) {
+        String message = ex instanceof BadCredentialsException
+                ? "Invalid username or password"
+                : (ex.getMessage() != null ? ex.getMessage() : "Authentication failed");
+        return buildResponse(HttpStatus.UNAUTHORIZED, message, request.getRequestURI());
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException ex, HttpServletRequest request) {
+        String message = ex.getMessage() != null ? ex.getMessage() : "Access denied";
+        return buildResponse(HttpStatus.FORBIDDEN, message, request.getRequestURI());
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException ex, HttpServletRequest request) {
         String message = ex.getBindingResult().getFieldErrors().stream()
@@ -50,6 +68,21 @@ public class GlobalExceptionHandler {
                     return field + ": " + violation.getMessage();
                 })
                 .collect(Collectors.joining("; "));
+        return buildResponse(HttpStatus.BAD_REQUEST, message, request.getRequestURI());
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleTypeMismatch(MethodArgumentTypeMismatchException ex, HttpServletRequest request) {
+        String param = ex.getName();
+        Class<?> requiredType = ex.getRequiredType();
+        String message;
+
+        if (requiredType == Integer.class || requiredType == int.class || requiredType == Long.class || requiredType == long.class) {
+            message = param + ": must be an integer number";
+        } else {
+            message = param + ": has invalid value";
+        }
+
         return buildResponse(HttpStatus.BAD_REQUEST, message, request.getRequestURI());
     }
 

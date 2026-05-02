@@ -16,10 +16,6 @@ public class SubmitApplicationRequest {
         @Positive(message = "must be a positive number")
         private Long vacancyId;
 
-        @NotNull(message = "must not be null")
-        @Positive(message = "must be a positive number")
-        private Long candidateId;
-
         @Positive(message = "must be a positive number")
         private Long resumeId;
 
@@ -28,12 +24,4 @@ public class SubmitApplicationRequest {
 
         @Size(max = ValidationConstraints.SUMMARY_MAX_LENGTH, message = "must be at most {max} characters")
         private String resumeSummary;
-
-        private Boolean simulateAuthorized;
-
-        private Boolean simulateRegistrationSuccess;
-
-        private Boolean simulateResumeCreationSuccess;
-
-        private Boolean simulateTestPassed;
 }

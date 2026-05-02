@@ -5,6 +5,7 @@ import com.example.hhflow.dto.request.VacancyStatusUpdateRequest;
 import com.example.hhflow.dto.response.VacancyDto;
 import com.example.hhflow.dto.response.PageResponse;
 import com.example.hhflow.mapper.ApiMapper;
+import com.example.hhflow.security.SecurityUtils;
 import com.example.hhflow.service.VacancyService;
 import com.example.hhflow.validation.ValidationConstraints;
 import org.springframework.data.domain.PageRequest;
@@ -48,11 +49,13 @@ public class VacancyController {
 
     @PostMapping
     public VacancyDto create(@Valid @RequestBody CreateVacancyRequest request) {
-        return apiMapper.toDto(vacancyService.create(request));
+        Long employerId = SecurityUtils.requireEmployer().getEmployerId();
+        return apiMapper.toDto(vacancyService.create(request, employerId));
     }
 
     @PatchMapping("/{id}/status")
     public VacancyDto updateStatus(@PathVariable @Min(value = ValidationConstraints.ID_MIN, message = "must be a positive number") Long id, @Valid @RequestBody VacancyStatusUpdateRequest request) {
-        return apiMapper.toDto(vacancyService.updateStatus(id, request.getStatus()));
+        Long employerId = SecurityUtils.requireEmployer().getEmployerId();
+        return apiMapper.toDto(vacancyService.updateStatus(id, request.getStatus(), employerId));
     }
 }

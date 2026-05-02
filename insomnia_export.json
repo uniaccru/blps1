@@ -1,14 +1,14 @@
 {
   "_type": "export",
   "__export_format": 4,
-  "__export_date": "2026-03-07T12:00:00.000Z",
-  "__export_source": "github-copilot",
+  "__export_date": "2026-05-02T12:00:00.000Z",
+  "__export_source": "hh-flow",
   "resources": [
     {
       "_id": "wrk_hh_flow",
       "_type": "workspace",
       "name": "HH Flow API",
-      "description": "REST API for candidate vacancy response process",
+      "description": "JWT + RBAC: после Login скопируйте accessToken в employer_token / applicant_token в окружении.",
       "parentId": null,
       "scope": "collection"
     },
@@ -18,248 +18,400 @@
       "parentId": "wrk_hh_flow",
       "name": "Base Environment",
       "data": {
-        "base_url": "http://localhost:8080"
+        "base_url": "http://localhost:8080",
+        "employer_phone": "+10000000001",
+        "employer_email": "hr-backend@company.com",
+        "applicant_phone": "+10000000101",
+        "password": "password",
+        "employer_token": "",
+        "applicant_token": "",
+        "vacancy_id": "1"
       }
     },
     {
-      "_id": "fld_public_api",
+      "_id": "fld_public",
       "_type": "request_group",
       "parentId": "wrk_hh_flow",
-      "name": "Public API"
+      "name": "Public (без JWT)"
     },
     {
-      "_id": "req_get_vacancies",
+      "_id": "fld_auth",
+      "_type": "request_group",
+      "parentId": "wrk_hh_flow",
+      "name": "Auth"
+    },
+    {
+      "_id": "fld_employer",
+      "_type": "request_group",
+      "parentId": "wrk_hh_flow",
+      "name": "Employer (Bearer employer_token)"
+    },
+    {
+      "_id": "fld_applicant",
+      "_type": "request_group",
+      "parentId": "wrk_hh_flow",
+      "name": "Applicant (Bearer applicant_token)"
+    },
+    {
+      "_id": "req_pub_get_vacancies",
       "_type": "request",
-      "parentId": "fld_public_api",
-      "name": "Get vacancies",
+      "parentId": "fld_public",
+      "name": "GET /vacancies",
       "method": "GET",
       "url": "{{ _.base_url }}/api/v1/vacancies",
-      "body": {},
+      "headers": [],
       "parameters": [],
-      "headers": []
+      "body": {}
     },
     {
-      "_id": "req_get_resumes",
+      "_id": "req_pub_get_vacancy_one",
       "_type": "request",
-      "parentId": "fld_public_api",
-      "name": "Get resumes",
+      "parentId": "fld_public",
+      "name": "GET /vacancies/{id}",
       "method": "GET",
-      "url": "{{ _.base_url }}/api/v1/resumes",
-      "body": {},
+      "url": "{{ _.base_url }}/api/v1/vacancies/1",
+      "headers": [],
       "parameters": [],
-      "headers": []
+      "body": {}
     },
     {
-      "_id": "req_get_employers",
+      "_id": "req_pub_submit_no_jwt",
       "_type": "request",
-      "parentId": "fld_public_api",
-      "name": "Get employers",
-      "method": "GET",
-      "url": "{{ _.base_url }}/api/v1/employers",
-      "body": {},
-      "parameters": [],
-      "headers": []
-    },
-    {
-      "_id": "req_create_employer",
-      "_type": "request",
-      "parentId": "fld_public_api",
-      "name": "Create employer",
+      "parentId": "fld_public",
+      "name": "POST /applications/submit без JWT → 401",
       "method": "POST",
-      "url": "{{ _.base_url }}/api/v1/employers",
+      "url": "{{ _.base_url }}/api/v1/applications/submit",
       "headers": [
         {
           "name": "Content-Type",
           "value": "application/json"
         }
       ],
+      "parameters": [],
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"email\": \"new-hr@company.com\"\n}"
-      },
-      "parameters": []
+        "text": "{\n  \"vacancyId\": 1,\n  \"resumeId\": 1\n}"
+      }
     },
     {
-      "_id": "req_create_vacancy_by_employer",
+      "_id": "req_auth_login_employer",
       "_type": "request",
-      "parentId": "fld_public_api",
-      "name": "Create vacancy by employerId",
+      "parentId": "fld_auth",
+      "name": "POST /auth/login (employer)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/v1/auth/login",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "parameters": [],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"username\": \"{{ _.employer_phone }}\",\n  \"password\": \"{{ _.password }}\"\n}"
+      }
+    },
+    {
+      "_id": "req_auth_login_employer_email",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "name": "POST /auth/login (работодатель по email)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/v1/auth/login",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "parameters": [],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"username\": \"{{ _.employer_email }}\",\n  \"password\": \"{{ _.password }}\"\n}"
+      }
+    },
+    {
+      "_id": "req_auth_login_applicant",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "name": "POST /auth/login (applicant)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/v1/auth/login",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "parameters": [],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"username\": \"{{ _.applicant_phone }}\",\n  \"password\": \"{{ _.password }}\"\n}"
+      }
+    },
+    {
+      "_id": "req_auth_register_employer",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "name": "POST /auth/register/employer (новый)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/v1/auth/register/employer",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "parameters": [],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"phone\": \"+79001234567\",\n  \"password\": \"password123\",\n  \"email\": \"unique-hr@example.com\"\n}"
+      }
+    },
+    {
+      "_id": "req_auth_register_applicant",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "name": "POST /auth/register/applicant (новый)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/v1/auth/register/applicant",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "parameters": [],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"phone\": \"+79007654321\",\n  \"password\": \"password123\"\n}"
+      }
+    },
+    {
+      "_id": "req_emp_create_vacancy",
+      "_type": "request",
+      "parentId": "fld_employer",
+      "name": "POST /vacancies (создание)",
       "method": "POST",
       "url": "{{ _.base_url }}/api/v1/vacancies",
       "headers": [
         {
-          "name": "Content-Type",
-          "value": "application/json"
-        }
-      ],
-      "body": {
-        "mimeType": "application/json",
-        "text": "{\n  \"title\": \"Senior Java Engineer\",\n  \"requiresTest\": true,\n  \"employerId\": 1\n}"
-      },
-      "parameters": []
-    },
-    {
-      "_id": "req_submit_success_no_test",
-      "_type": "request",
-      "parentId": "fld_public_api",
-      "name": "Submit success (no test)",
-      "method": "POST",
-      "url": "{{ _.base_url }}/api/v1/applications/submit",
-      "headers": [
+          "name": "Authorization",
+          "value": "Bearer {{ _.employer_token }}"
+        },
         {
           "name": "Content-Type",
           "value": "application/json"
         }
       ],
+      "parameters": [],
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"vacancyId\": 1,\n  \"candidateId\": 101,\n  \"resumeId\": 1,\n  \"simulateAuthorized\": true\n}"
-      },
-      "parameters": []
+        "text": "{\n  \"title\": \"API QA vacancy\",\n  \"requiresTest\": false\n}"
+      }
     },
     {
-      "_id": "req_submit_success_with_test",
+      "_id": "req_emp_patch_vacancy_status",
       "_type": "request",
-      "parentId": "fld_public_api",
-      "name": "Submit success (test passed)",
-      "method": "POST",
-      "url": "{{ _.base_url }}/api/v1/applications/submit",
+      "parentId": "fld_employer",
+      "name": "PATCH /vacancies/{vacancy_id}/status",
+      "method": "PATCH",
+      "url": "{{ _.base_url }}/api/v1/vacancies/{{ _.vacancy_id }}/status",
       "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.employer_token }}"
+        },
         {
           "name": "Content-Type",
           "value": "application/json"
         }
       ],
+      "parameters": [],
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"vacancyId\": 2,\n  \"candidateId\": 101,\n  \"resumeId\": 1,\n  \"simulateAuthorized\": true,\n  \"simulateTestPassed\": true\n}"
-      },
-      "parameters": []
+        "text": "{\n  \"status\": \"ARCHIVED\"\n}"
+      }
     },
     {
-      "_id": "req_submit_failed_test",
+      "_id": "req_emp_get_employers",
       "_type": "request",
-      "parentId": "fld_public_api",
-      "name": "Submit auto reject (test failed)",
-      "method": "POST",
-      "url": "{{ _.base_url }}/api/v1/applications/submit",
+      "parentId": "fld_employer",
+      "name": "GET /employers",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/v1/employers",
       "headers": [
         {
-          "name": "Content-Type",
-          "value": "application/json"
+          "name": "Authorization",
+          "value": "Bearer {{ _.employer_token }}"
         }
       ],
-      "body": {
-        "mimeType": "application/json",
-        "text": "{\n  \"vacancyId\": 2,\n  \"candidateId\": 101,\n  \"resumeId\": 1,\n  \"simulateAuthorized\": true,\n  \"simulateTestPassed\": false\n}"
-      },
-      "parameters": []
+      "parameters": [],
+      "body": {}
     },
     {
-      "_id": "req_submit_archived",
+      "_id": "req_emp_get_applications",
       "_type": "request",
-      "parentId": "fld_public_api",
-      "name": "Submit declined (archived vacancy)",
-      "method": "POST",
-      "url": "{{ _.base_url }}/api/v1/applications/submit",
-      "headers": [
-        {
-          "name": "Content-Type",
-          "value": "application/json"
-        }
-      ],
-      "body": {
-        "mimeType": "application/json",
-        "text": "{\n  \"vacancyId\": 3,\n  \"candidateId\": 101,\n  \"resumeId\": 1,\n  \"simulateAuthorized\": true\n}"
-      },
-      "parameters": []
-    },
-    {
-      "_id": "req_submit_unauthorized",
-      "_type": "request",
-      "parentId": "fld_public_api",
-      "name": "Submit declined (unauthorized)",
-      "method": "POST",
-      "url": "{{ _.base_url }}/api/v1/applications/submit",
-      "headers": [
-        {
-          "name": "Content-Type",
-          "value": "application/json"
-        }
-      ],
-      "body": {
-        "mimeType": "application/json",
-        "text": "{\n  \"vacancyId\": 1,\n  \"candidateId\": 101,\n  \"resumeId\": 1,\n  \"simulateAuthorized\": false\n}"
-      },
-      "parameters": []
-    },
-    {
-      "_id": "req_submit_registration_failed",
-      "_type": "request",
-      "parentId": "fld_public_api",
-      "name": "Submit failed (registration failed)",
-      "method": "POST",
-      "url": "{{ _.base_url }}/api/v1/applications/submit",
-      "headers": [
-        {
-          "name": "Content-Type",
-          "value": "application/json"
-        }
-      ],
-      "body": {
-        "mimeType": "application/json",
-        "text": "{\n  \"vacancyId\": 1,\n  \"candidateId\": 999,\n  \"simulateAuthorized\": true,\n  \"simulateRegistrationSuccess\": false\n}"
-      },
-      "parameters": []
-    },
-    {
-      "_id": "req_submit_resume_creation_failed",
-      "_type": "request",
-      "parentId": "fld_public_api",
-      "name": "Submit failed (resume creation failed)",
-      "method": "POST",
-      "url": "{{ _.base_url }}/api/v1/applications/submit",
-      "headers": [
-        {
-          "name": "Content-Type",
-          "value": "application/json"
-        }
-      ],
-      "body": {
-        "mimeType": "application/json",
-        "text": "{\n  \"vacancyId\": 1,\n  \"candidateId\": 777,\n  \"simulateAuthorized\": true,\n  \"simulateRegistrationSuccess\": true,\n  \"simulateResumeCreationSuccess\": false\n}"
-      },
-      "parameters": []
-    },
-    {
-      "_id": "req_submit_resume_creation_success",
-      "_type": "request",
-      "parentId": "fld_public_api",
-      "name": "Submit success (autocreate resume)",
-      "method": "POST",
-      "url": "{{ _.base_url }}/api/v1/applications/submit",
-      "headers": [
-        {
-          "name": "Content-Type",
-          "value": "application/json"
-        }
-      ],
-      "body": {
-        "mimeType": "application/json",
-        "text": "{\n  \"vacancyId\": 1,\n  \"candidateId\": 888,\n  \"resumeFullName\": \"Auto Candidate 888\",\n  \"resumeSummary\": \"Java/Spring basics\",\n  \"simulateAuthorized\": true,\n  \"simulateRegistrationSuccess\": true,\n  \"simulateResumeCreationSuccess\": true\n}"
-      },
-      "parameters": []
-    },
-    {
-      "_id": "req_get_applications",
-      "_type": "request",
-      "parentId": "fld_public_api",
-      "name": "Get applications",
+      "parentId": "fld_employer",
+      "name": "GET /applications",
       "method": "GET",
       "url": "{{ _.base_url }}/api/v1/applications",
-      "body": {},
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.employer_token }}"
+        }
+      ],
       "parameters": [],
-      "headers": []
+      "body": {}
+    },
+    {
+      "_id": "req_app_get_resumes",
+      "_type": "request",
+      "parentId": "fld_applicant",
+      "name": "GET /resumes",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/v1/resumes",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.applicant_token }}"
+        }
+      ],
+      "parameters": [],
+      "body": {}
+    },
+    {
+      "_id": "req_app_post_resume",
+      "_type": "request",
+      "parentId": "fld_applicant",
+      "name": "POST /resumes (новый applicant)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/v1/resumes",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.applicant_token }}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "parameters": [],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"fullName\": \"Тест Кандидат\",\n  \"summary\": \"Описание для curl/Insomnia\"\n}"
+      }
+    },
+    {
+      "_id": "req_app_submit_ok",
+      "_type": "request",
+      "parentId": "fld_applicant",
+      "name": "POST /applications/submit (успех, vacancy 1)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/v1/applications/submit",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.applicant_token }}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "parameters": [],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"vacancyId\": 1,\n  \"resumeId\": 1\n}"
+      }
+    },
+    {
+      "_id": "req_app_submit_archived",
+      "_type": "request",
+      "parentId": "fld_applicant",
+      "name": "POST /applications/submit (архивная вакансия)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/v1/applications/submit",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.applicant_token }}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "parameters": [],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"vacancyId\": 3,\n  \"resumeId\": 1\n}"
+      }
+    },
+    {
+      "_id": "req_app_submit_resume_failed",
+      "_type": "request",
+      "parentId": "fld_applicant",
+      "name": "POST /applications/submit RESUME_CREATION_FAILED (новый applicant без резюме и пустые поля)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/v1/applications/submit",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.applicant_token }}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "parameters": [],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"vacancyId\": 1,\n  \"resumeFullName\": \"\",\n  \"resumeSummary\": \"\"\n}"
+      }
+    },
+    {
+      "_id": "req_app_submit_autoresume",
+      "_type": "request",
+      "parentId": "fld_applicant",
+      "name": "POST /applications/submit автосоздание резюме (только если applicant_token без строки resume)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/v1/applications/submit",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.applicant_token }}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "parameters": [],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"vacancyId\": 1,\n  \"resumeFullName\": \"Иван Авто\",\n  \"resumeSummary\": \"Kotlin, Spring\"\n}"
+      }
+    },
+    {
+      "_id": "req_app_get_resume_one",
+      "_type": "request",
+      "parentId": "fld_applicant",
+      "name": "GET /resumes/1",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/v1/resumes/1",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.applicant_token }}"
+        }
+      ],
+      "parameters": [],
+      "body": {}
     }
   ]
 }

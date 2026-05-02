@@ -11,6 +11,4 @@ public class PageMetadata {
     private final int size;
     private final long totalElements;
     private final int totalPages;
-    private final boolean first;
-    private final boolean last;
 }

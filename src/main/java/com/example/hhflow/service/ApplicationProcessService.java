@@ -3,15 +3,12 @@ package com.example.hhflow.service;
 import com.example.hhflow.dto.request.SubmitApplicationRequest;
 import com.example.hhflow.dto.response.ApplicationDto;
 import com.example.hhflow.dto.response.SubmissionResponse;
-import com.example.hhflow.exception.BusinessException;
 import com.example.hhflow.mapper.ApiMapper;
 import com.example.hhflow.model.JobApplication;
 import com.example.hhflow.model.Resume;
 import com.example.hhflow.model.SubmissionOutcome;
 import com.example.hhflow.model.Vacancy;
 import com.example.hhflow.model.VacancyStatus;
-import com.example.hhflow.service.subprocess.AuthSubprocessService;
-import com.example.hhflow.service.subprocess.RegistrationSubprocessService;
 import com.example.hhflow.service.subprocess.ResumeCreationSubprocessService;
 import com.example.hhflow.service.subprocess.TestSubprocessService;
 import lombok.RequiredArgsConstructor;
@@ -28,30 +25,17 @@ public class ApplicationProcessService {
     private final ResumeService resumeService;
     private final JobApplicationService jobApplicationService;
     private final NotificationService notificationService;
-    private final AuthSubprocessService authSubprocessService;
-    private final RegistrationSubprocessService registrationSubprocessService;
+    private final ApplicantService applicantService;
     private final ResumeCreationSubprocessService resumeCreationSubprocessService;
     private final TestSubprocessService testSubprocessService;
     private final ApiMapper apiMapper;
 
     @Transactional
-    public SubmissionResponse submitApplication(SubmitApplicationRequest request) {
-        if (!authSubprocessService.isAuthorized(request.getSimulateAuthorized())) {
-            return new SubmissionResponse(
-                    SubmissionOutcome.UNAUTHORIZED,
-                    "User is not authorized. Submission declined.",
-                    null
-            );
-        }
-
-        boolean registered = registrationSubprocessService.registerIfMissing(
-                request.getCandidateId(),
-                request.getSimulateRegistrationSuccess()
-        );
-        if (!registered) {
+    public SubmissionResponse submitApplication(SubmitApplicationRequest request, Long applicantId) {
+        if (!applicantService.existsById(applicantId)) {
             return new SubmissionResponse(
                     SubmissionOutcome.REGISTRATION_FAILED,
-                    "Registration subprocess returned failure.",
+                    "Applicant profile is missing for this account.",
                     null
             );
         }
@@ -65,7 +49,7 @@ public class ApplicationProcessService {
             );
         }
 
-        Optional<Resume> resumeOptional = resolveResume(request);
+        Optional<Resume> resumeOptional = resolveResume(request, applicantId);
         if (resumeOptional.isEmpty()) {
             return new SubmissionResponse(
                 SubmissionOutcome.RESUME_CREATION_FAILED,
@@ -76,11 +60,7 @@ public class ApplicationProcessService {
         Resume resume = resumeOptional.get();
 
         if (vacancy.isRequiresTest()) {
-            boolean testPassed = testSubprocessService.passTest(
-                    request.getCandidateId(),
-                    request.getVacancyId(),
-                    request.getSimulateTestPassed()
-            );
+            boolean testPassed = testSubprocessService.passTest(applicantId, request.getVacancyId());
             if (!testPassed) {
                 return new SubmissionResponse(
                         SubmissionOutcome.AUTO_REJECTED,
@@ -91,7 +71,7 @@ public class ApplicationProcessService {
         }
 
         JobApplication application = jobApplicationService.createCompleted(
-            request.getCandidateId(),
+                applicantId,
                 vacancy,
                 resume
         );
@@ -104,29 +84,24 @@ public class ApplicationProcessService {
                 "Application successfully completed.",
                 applicationDto
         );
-        
+
     }
 
-    private Optional<Resume> resolveResume(SubmitApplicationRequest request) {
+    private Optional<Resume> resolveResume(SubmitApplicationRequest request, Long applicantId) {
         if (request.getResumeId() != null) {
-            Resume resume = resumeService.getById(request.getResumeId());
-            if (!resume.getApplicant().getId().equals(request.getCandidateId())) {
-                throw new BusinessException("Resume does not belong to candidate: " + request.getCandidateId());
-            }
-            return Optional.of(resume);
+            return Optional.of(resumeService.getByIdAndApplicant(request.getResumeId(), applicantId));
         }
 
-        return resumeService.findByCandidateId(request.getCandidateId())
+        return resumeService.findByCandidateId(applicantId)
                 .map(Optional::of)
-                .orElseGet(() -> createResumeViaSubprocess(request));
+                .orElseGet(() -> createResumeViaSubprocess(request, applicantId));
     }
 
-    private Optional<Resume> createResumeViaSubprocess(SubmitApplicationRequest request) {
+    private Optional<Resume> createResumeViaSubprocess(SubmitApplicationRequest request, Long applicantId) {
         return resumeCreationSubprocessService.createResume(
-                request.getCandidateId(),
+                applicantId,
                 request.getResumeFullName(),
-                request.getResumeSummary(),
-                request.getSimulateResumeCreationSuccess()
+                request.getResumeSummary()
         );
     }
 }

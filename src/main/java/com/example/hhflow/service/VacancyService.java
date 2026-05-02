@@ -2,6 +2,7 @@ package com.example.hhflow.service;
 
 import com.example.hhflow.dto.request.CreateVacancyRequest;
 import com.example.hhflow.model.Employer;
+import com.example.hhflow.exception.BusinessException;
 import com.example.hhflow.exception.NotFoundException;
 import com.example.hhflow.model.Vacancy;
 import com.example.hhflow.model.VacancyStatus;
@@ -30,9 +31,9 @@ public class VacancyService {
     }
 
     @Transactional
-    public Vacancy create(CreateVacancyRequest request) {
-        Employer employer = employerRepository.findById(request.getEmployerId())
-            .orElseThrow(() -> new NotFoundException("Employer not found: " + request.getEmployerId()));
+    public Vacancy create(CreateVacancyRequest request, Long employerId) {
+        Employer employer = employerRepository.findById(employerId)
+            .orElseThrow(() -> new NotFoundException("Employer not found: " + employerId));
 
         Vacancy vacancy = new Vacancy();
         vacancy.setTitle(request.getTitle());
@@ -43,8 +44,11 @@ public class VacancyService {
     }
 
     @Transactional
-    public Vacancy updateStatus(Long vacancyId, VacancyStatus status) {
+    public Vacancy updateStatus(Long vacancyId, VacancyStatus status, Long employerId) {
         Vacancy vacancy = getById(vacancyId);
+        if (!vacancy.getEmployer().getId().equals(employerId)) {
+            throw new BusinessException("Vacancy does not belong to this employer");
+        }
         vacancy.setStatus(status);
         return vacancyRepository.save(vacancy);
     }

@@ -1,5 +1,6 @@
 package com.example.hhflow.service;
 
+import com.example.hhflow.exception.NotFoundException;
 import com.example.hhflow.model.Applicant;
 import com.example.hhflow.repository.ApplicantRepository;
 import lombok.RequiredArgsConstructor;
@@ -15,9 +16,8 @@ public class ApplicantService {
         return applicantRepository.existsById(applicantId);
     }
 
-    public Applicant create(Long applicantId) {
-        Applicant applicant = new Applicant();
-        applicant.setId(applicantId);
-        return applicantRepository.save(applicant);
+    public Applicant getById(Long id) {
+        return applicantRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Applicant not found: " + id));
     }
 }

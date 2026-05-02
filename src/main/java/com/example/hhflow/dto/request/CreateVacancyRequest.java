@@ -3,7 +3,6 @@ package com.example.hhflow.dto.request;
 import com.example.hhflow.validation.ValidationConstraints;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Positive;
 import javax.validation.constraints.Size;
 
 import lombok.Getter;
@@ -19,8 +18,4 @@ public class CreateVacancyRequest {
 
         @NotNull(message = "must not be null")
         private Boolean requiresTest;
-
-        @NotNull(message = "must not be null")
-        @Positive(message = "must be a positive number")
-        private Long employerId;
 }

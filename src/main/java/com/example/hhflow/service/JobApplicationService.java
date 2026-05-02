@@ -11,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 import java.time.OffsetDateTime;
@@ -40,9 +41,23 @@ public class JobApplicationService {
         return jobApplicationRepository.findAll(pageable);
     }
 
+    @Transactional(readOnly = true)
+    public Page<JobApplication> findForEmployer(Long employerId, Pageable pageable) {
+        return jobApplicationRepository.findByVacancy_Employer_Id(employerId, pageable);
+    }
+
     public JobApplication getById(Long id) {
         return jobApplicationRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Application not found: " + id));
+    }
+
+    @Transactional(readOnly = true)
+    public JobApplication getForEmployer(Long applicationId, Long employerId) {
+        JobApplication application = getById(applicationId);
+        if (!application.getVacancy().getEmployer().getId().equals(employerId)) {
+            throw new BusinessException("Application does not belong to this employer's vacancies");
+        }
+        return application;
     }
 
     public JobApplication markEmployerNotified(JobApplication application) {
