@@ -24,11 +24,11 @@ public class UserAccount {
     @Column(nullable = false, unique = true, length = ValidationConstraints.PHONE_MAX_LENGTH)
     private String phone;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = ValidationConstraints.PASSWORD_HASH_MAX_LENGTH)
     private String passwordHash;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 32)
+    @Column(nullable = false, length = ValidationConstraints.ROLE_MAX_LENGTH)
     private Role role;
 
     @OneToOne(fetch = FetchType.LAZY)
