@@ -6,7 +6,7 @@ import com.example.hhflow.dto.request.RegisterApplicantRequest;
 import com.example.hhflow.dto.request.RegisterEmployerRequest;
 import com.example.hhflow.dto.response.AuthResponse;
 import com.example.hhflow.service.AuthService;
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;

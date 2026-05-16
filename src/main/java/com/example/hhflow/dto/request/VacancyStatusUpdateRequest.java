@@ -1,6 +1,6 @@
 package com.example.hhflow.dto.request;
 
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 
 import com.example.hhflow.model.VacancyStatus;
 import lombok.Getter;

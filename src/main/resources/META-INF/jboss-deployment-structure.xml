@@ -1,0 +1,12 @@
+<jboss-deployment-structure>
+    <deployment>
+        <exclude-subsystems>
+            <subsystem name="jpa" />
+            <subsystem name="weld" />
+        </exclude-subsystems>
+        <exclusions>
+            <module name="org.hibernate" />
+            <module name="org.hibernate.jpa" />
+        </exclusions>
+    </deployment>
+</jboss-deployment-structure>

@@ -12,11 +12,14 @@ spring:
   web:
     resources:
       add-mappings: false
+  
+  # JNDI DataSource configuration for WildFly
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:hh_flow}
-    username: ${DB_USER:hh_user}
-    password: ${DB_PASSWORD:hh_password}
+    jndi-name: java:/PostgresDS
+  
+  # JPA/Hibernate configuration for WildFly with managed transactions
   jpa:
+    database-platform: org.hibernate.dialect.PostgreSQL10Dialect
     hibernate:
       ddl-auto: create
     open-in-view: false
@@ -25,9 +28,16 @@ spring:
       hibernate:
         format_sql: true
     show-sql: true
+    
+  # Transaction management - use JTA
+  jta:
+    log-dir: ${jboss.server.log.dir:./logs}
+    enabled: true
+  
   sql:
     init:
       mode: always
+  
   jackson:
     serialization:
       write-dates-as-timestamps: false
