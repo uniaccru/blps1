@@ -2,11 +2,18 @@ package com.example.hhflow;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 
 @SpringBootApplication
-public class HhFlowApplication {
+public class HhFlowApplication extends SpringBootServletInitializer {
 
     public static void main(String[] args) {
         SpringApplication.run(HhFlowApplication.class, args);
+    }
+
+    @Override
+    protected SpringApplicationBuilder configure(SpringApplicationBuilder builder) {
+        return builder.sources(HhFlowApplication.class);
     }
 }

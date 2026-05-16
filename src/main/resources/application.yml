@@ -19,7 +19,7 @@ spring:
   
   # JPA/Hibernate configuration for WildFly with managed transactions
   jpa:
-    database-platform: org.hibernate.dialect.PostgreSQL10Dialect
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: create
     open-in-view: false
