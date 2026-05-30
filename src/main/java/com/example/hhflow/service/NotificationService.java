@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.time.Clock;
 import java.time.OffsetDateTime;
@@ -19,6 +20,9 @@ public class NotificationService {
 
     private final NotificationRepository notificationRepository;
     private final Clock clock;
+    //NEW
+    @Value("${demo.rollback-vacancy-id:-1}")
+    private Long demoRollbackVacancyId;
 
     public void notifyEmployer(JobApplication application) {
         log.info("Employer {} notified about application {}", application.getVacancy().getEmployer().getEmail(), application.getId());
@@ -31,5 +35,12 @@ public class NotificationService {
         n.setRead(false);
 
         notificationRepository.save(n);
+
+        //NEW
+
+        if (application.getVacancy().getId().equals(demoRollbackVacancyId)) {
+            log.warn("Demo rollback triggered for vacancyId={} after notification save", demoRollbackVacancyId);
+            throw new RuntimeException("Demo rollback triggered for vacancyId=" + demoRollbackVacancyId);
+        }
     }
 }

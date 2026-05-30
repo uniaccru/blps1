@@ -41,3 +41,8 @@ spring:
   jackson:
     serialization:
       write-dates-as-timestamps: false
+
+demo:
+  # Set this to a vacancy ID to force a rollback after notification save.
+  # Use -1 to keep the demo rollback disabled.
+  rollback-vacancy-id: 2

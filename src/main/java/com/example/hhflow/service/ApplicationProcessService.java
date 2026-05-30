@@ -14,6 +14,8 @@ import com.example.hhflow.repository.UserRepository;
 import com.example.hhflow.service.subprocess.ResumeCreationSubprocessService;
 import com.example.hhflow.service.subprocess.TestSubprocessService;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionStatus;
@@ -34,6 +36,7 @@ public class ApplicationProcessService {
     private final TestSubprocessService testSubprocessService;
     private final ApiMapper apiMapper;
     private final PlatformTransactionManager transactionManager;
+    private static final Logger log = LoggerFactory.getLogger(ApplicationProcessService.class);
 
     public SubmissionResponse submitApplication(SubmitApplicationRequest request, Long applicantUserId) {
         if (userRepository.findById(applicantUserId).filter(u -> u.getRole() == Role.APPLICANT).isEmpty()) {
@@ -74,6 +77,7 @@ public class ApplicationProcessService {
             }
         }
 
+        // параметры нашей транзакции 
         DefaultTransactionDefinition def = new DefaultTransactionDefinition();
         def.setName("submitApplicationTx");
         def.setPropagationBehavior(DefaultTransactionDefinition.PROPAGATION_REQUIRED);
@@ -81,6 +85,7 @@ public class ApplicationProcessService {
         TransactionStatus txStatus = transactionManager.getTransaction(def);
         JobApplication application;
         try {
+            log.info("Begin transaction {} for applicantId={}, vacancyId={}", def.getName(), applicantUserId, vacancy.getId());
             JobApplication app = jobApplicationService.createCompleted(
                     applicantUserId,
                     vacancy,
@@ -89,8 +94,14 @@ public class ApplicationProcessService {
             notificationService.notifyEmployer(app);
             application = jobApplicationService.markEmployerNotified(app);
             transactionManager.commit(txStatus);
+            if (application != null) {
+                log.info("Committed transaction {} for applicationId={}", def.getName(), application.getId());
+            } else {
+                log.info("Committed transaction {} (no application instance available)", def.getName());
+            }
         } catch (RuntimeException | Error ex) {
             transactionManager.rollback(txStatus);
+            log.warn("Rolled back transaction {} for applicantId={}, vacancyId={}", def.getName(), applicantUserId, vacancy.getId(), ex);
             throw ex;
         }
 
