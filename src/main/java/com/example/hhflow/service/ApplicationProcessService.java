@@ -17,9 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.TransactionStatus;
-import org.springframework.transaction.support.DefaultTransactionDefinition;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -35,9 +33,9 @@ public class ApplicationProcessService {
     private final ResumeCreationSubprocessService resumeCreationSubprocessService;
     private final TestSubprocessService testSubprocessService;
     private final ApiMapper apiMapper;
-    private final PlatformTransactionManager transactionManager;
     private static final Logger log = LoggerFactory.getLogger(ApplicationProcessService.class);
 
+    @Transactional
     public SubmissionResponse submitApplication(SubmitApplicationRequest request, Long applicantUserId) {
         if (userRepository.findById(applicantUserId).filter(u -> u.getRole() == Role.APPLICANT).isEmpty()) {
             return new SubmissionResponse(
@@ -77,32 +75,18 @@ public class ApplicationProcessService {
             }
         }
 
-        // параметры нашей транзакции 
-        DefaultTransactionDefinition def = new DefaultTransactionDefinition();
-        def.setName("submitApplicationTx");
-        def.setPropagationBehavior(DefaultTransactionDefinition.PROPAGATION_REQUIRED);
+        JobApplication app = jobApplicationService.createCompleted(
+                applicantUserId,
+                vacancy,
+                resume
+        );
+        notificationService.notifyEmployer(app);
+        JobApplication application = jobApplicationService.markEmployerNotified(app);
 
-        TransactionStatus txStatus = transactionManager.getTransaction(def);
-        JobApplication application;
-        try {
-            log.info("Begin transaction {} for applicantId={}, vacancyId={}", def.getName(), applicantUserId, vacancy.getId());
-            JobApplication app = jobApplicationService.createCompleted(
-                    applicantUserId,
-                    vacancy,
-                    resume
-            );
-            notificationService.notifyEmployer(app);
-            application = jobApplicationService.markEmployerNotified(app);
-            transactionManager.commit(txStatus);
-            if (application != null) {
-                log.info("Committed transaction {} for applicationId={}", def.getName(), application.getId());
-            } else {
-                log.info("Committed transaction {} (no application instance available)", def.getName());
-            }
-        } catch (RuntimeException | Error ex) {
-            transactionManager.rollback(txStatus);
-            log.warn("Rolled back transaction {} for applicantId={}, vacancyId={}", def.getName(), applicantUserId, vacancy.getId(), ex);
-            throw ex;
+        if (application != null) {
+            log.info("Application processed for applicationId={}", application.getId());
+        } else {
+            log.info("Application processed (no application instance available)");
         }
 
         ApplicationDto applicationDto = apiMapper.toDto(application);

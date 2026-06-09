@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- При деплое WAR на WildFly: скопировать в src/main/webapp/WEB-INF/jboss-web.xml
-     Связывает приложение с доменом hhflowJaas. Без security-constraint в web.xml контейнерный BASIC не включается —
-     основной поток остаётся Spring Security + JWT. -->
-<jboss-web>
-    <security-domain>hhflowJaas</security-domain>
-</jboss-web>
