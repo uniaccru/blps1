@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<connector xmlns="http://java.sun.com/xml/ns/j2ee"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee
+             http://java.sun.com/xml/ns/j2ee/connector_1_5.xsd"
+             version="1.5">
+    <description>Odoo Recruitment JCA Resource Adapter</description>
+    <display-name>Odoo Connector</display-name>
+    <vendor-name>com.example</vendor-name>
+    <eis-type>Odoo Recruitment</eis-type>
+    <resourceadapter-version>1.0</resourceadapter-version>
+    <resourceadapter>
+        <resourceadapter-class>com.example.odoo.connector.OdooResourceAdapter</resourceadapter-class>
+        <outbound-resourceadapter>
+            <connection-definition>
+                <managedconnectionfactory-class>com.example.odoo.connector.OdooManagedConnectionFactory</managedconnectionfactory-class>
+                <connectionfactory-interface>com.example.odoo.connector.OdooConnectionFactory</connectionfactory-interface>
+                <connectionfactory-impl-class>com.example.odoo.connector.OdooConnectionFactoryImpl</connectionfactory-impl-class>
+                <connection-interface>com.example.odoo.connector.OdooConnection</connection-interface>
+                <connection-impl-class>com.example.odoo.connector.OdooConnectionImpl</connection-impl-class>
+            </connection-definition>
+        </outbound-resourceadapter>
+    </resourceadapter>
+</connector>

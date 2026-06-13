@@ -30,3 +30,11 @@ spring:
 
 demo:
   rollback-vacancy-id: -1
+
+hh:
+  odoo:
+    enabled: true
+    url: ${ODOO_URL:http://localhost:8069}
+    database: ${ODOO_DB:odoo}
+    username: ${ODOO_USER:admin}
+    password: ${ODOO_PASSWORD:admin}

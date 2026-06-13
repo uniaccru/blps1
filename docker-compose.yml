@@ -42,6 +42,39 @@ services:
       - "1025:1025"
       - "8025:8025"
 
+  odoo-db:
+    image: postgres:15
+    container_name: hh-flow-odoo-db
+    environment:
+      POSTGRES_USER: odoo
+      POSTGRES_PASSWORD: odoo
+      POSTGRES_DB: postgres
+    volumes:
+      - odoo_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U odoo -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  odoo:
+    image: odoo:17.0
+    container_name: hh-flow-odoo
+    depends_on:
+      odoo-db:
+        condition: service_healthy
+    ports:
+      - "8069:8069"
+    environment:
+      HOST: odoo-db
+      USER: odoo
+      PASSWORD: odoo
+    command: >
+      odoo --db_host=odoo-db --db_user=odoo --db_password=odoo
+           -d odoo -i hr_recruitment --without-demo=all
+    volumes:
+      - odoo_data:/var/lib/odoo
+
   app:
     build:
       context: .
@@ -53,6 +86,8 @@ services:
       rabbitmq:
         condition: service_healthy
       mailhog:
+        condition: service_started
+      odoo:
         condition: service_started
     environment:
       SPRING_PROFILES_ACTIVE: docker
@@ -68,8 +103,14 @@ services:
       MAIL_HOST: mailhog
       MAIL_PORT: 1025
       MAIL_FROM: noreply@hhflow.local
+      ODOO_URL: http://odoo:8069
+      ODOO_DB: odoo
+      ODOO_USER: admin
+      ODOO_PASSWORD: admin
     ports:
       - "8080:8080"
 
 volumes:
   postgres_data:
+  odoo_db_data:
+  odoo_data:
