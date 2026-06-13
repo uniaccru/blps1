@@ -20,7 +20,6 @@ services:
     image: rabbitmq:3.13-management-alpine
     container_name: hh-flow-rabbitmq
     hostname: rabbitmq
-    # На Docker Desktop (Mac) без user контейнер стартует от root → .erlang.cookie eacces
     user: "999:999"
     environment:
       RABBITMQ_DEFAULT_USER: guest

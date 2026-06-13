@@ -1,11 +1,5 @@
-# Overlay для реального Gmail вместо MailHog.
-# Использование:
-#   cp .env.gmail.example .env.gmail   # заполнить GMAIL_APP_PASSWORD
 #   docker compose --env-file .env.gmail -f docker-compose.yml -f docker-compose.gmail.yml up --build
-#
-# Email получателя = email работодателя вакансии в БД.
-# Зарегистрируйте работодателя с stolnaya.stella@gmail.com через Insomnia
-# или укажите EXPECTED_TO при ручной проверке.
+
 
 services:
   app:
