@@ -27,7 +27,8 @@ public class AppConfig {
     @Bean
     @ConditionalOnProperty(
         name = "spring.datasource.jndi-name",
-        matchIfMissing = false
+        matchIfMissing = false,
+        havingValue = "java:/PostgresDS"
     )
     public DataSource jndiDataSource() {
         JndiObjectFactoryBean bean = new JndiObjectFactoryBean();

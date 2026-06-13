@@ -42,6 +42,33 @@ spring:
     serialization:
       write-dates-as-timestamps: false
 
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+
+  mail:
+    host: ${MAIL_HOST:}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: ${MAIL_SMTP_AUTH:true}
+          starttls:
+            enable: ${MAIL_SMTP_STARTTLS:true}
+
+hh:
+  email:
+    queue: employer.application.email
+    from: ${MAIL_FROM:noreply@hhflow.local}
+  outbox:
+    poll-interval-ms: 5000
+    batch-size: 50
+    max-retries: 5
+
 demo:
   # Set this to a vacancy ID to force a rollback after notification save.
   # Use -1 to keep the demo rollback disabled.

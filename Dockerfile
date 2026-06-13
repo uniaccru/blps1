@@ -4,12 +4,12 @@ WORKDIR /app
 COPY pom.xml .
 COPY src ./src
 
-RUN mvn -q -DskipTests package
+RUN mvn -q -DskipTests -Pdocker package
 
 FROM eclipse-temurin:17-jre
 WORKDIR /app
 
-COPY --from=builder /app/target/hh-flow-0.0.1-SNAPSHOT.jar app.jar
+COPY --from=builder /app/target/hh-flow-0.0.1-SNAPSHOT.war app.war
 
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-jar", "app.war"]

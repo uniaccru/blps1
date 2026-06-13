@@ -1,4 +1,3 @@
-version: '3.9'
 services:
   postgres:
     image: postgres:16
@@ -17,6 +16,32 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: hh-flow-rabbitmq
+    hostname: rabbitmq
+    # На Docker Desktop (Mac) без user контейнер стартует от root → .erlang.cookie eacces
+    user: "999:999"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+      start_period: 40s
+
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    container_name: hh-flow-mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
   app:
     build:
       context: .
@@ -25,12 +50,24 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      mailhog:
+        condition: service_started
     environment:
+      SPRING_PROFILES_ACTIVE: docker
       DB_HOST: postgres
       DB_PORT: 5432
       DB_NAME: hh_flow
       DB_USER: hh_user
       DB_PASSWORD: hh_password
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: guest
+      RABBITMQ_PASSWORD: guest
+      MAIL_HOST: mailhog
+      MAIL_PORT: 1025
+      MAIL_FROM: noreply@hhflow.local
     ports:
       - "8080:8080"
 

@@ -19,6 +19,7 @@ public class NotificationService {
     private static final Logger log = LoggerFactory.getLogger(NotificationService.class);
 
     private final NotificationRepository notificationRepository;
+    private final EmailOutboxService emailOutboxService;
     private final Clock clock;
     //NEW
     @Value("${demo.rollback-vacancy-id:-1}")
@@ -30,13 +31,13 @@ public class NotificationService {
         Notification n = new Notification();
         n.setRecipient(application.getVacancy().getEmployer());
         n.setApplication(application);
-        n.setMessage(String.format("New application %d for %s", application.getId(), application.getVacancy().getTitle()));
+        String message = String.format("New application %d for %s", application.getId(), application.getVacancy().getTitle());
+        n.setMessage(message);
         n.setCreatedAt(OffsetDateTime.now(clock));
         n.setRead(false);
 
         notificationRepository.save(n);
-
-        //NEW
+        emailOutboxService.enqueueEmployerApplicationEmail(application, message);
 
         if (application.getVacancy().getId().equals(demoRollbackVacancyId)) {
             log.warn("Demo rollback triggered for vacancyId={} after notification save", demoRollbackVacancyId);

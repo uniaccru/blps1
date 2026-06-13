@@ -20,8 +20,10 @@
       "data": {
         "base_url": "http://localhost:8080",
         "employer_email": "hr-backend@company.com",
+        "employer_email_gmail": "stolnaya.stella@gmail.com",
         "applicant_email": "ivan.petrov@example.com",
         "password": "password",
+        "mailhog_ui": "http://localhost:8025",
         "employer_token": "",
         "applicant_token": "",
         "refresh_token": "",
@@ -54,6 +56,12 @@
       "_type": "request_group",
       "parentId": "wrk_hh_flow",
       "name": "Applicant (Bearer applicant_token)"
+    },
+    {
+      "_id": "fld_email_e2e",
+      "_type": "request_group",
+      "parentId": "wrk_hh_flow",
+      "name": "Email E2E (outbox → RabbitMQ → JMS → SMTP)"
     },
     {
       "_id": "req_pub_get_vacancies",
@@ -399,6 +407,136 @@
       ],
       "parameters": [],
       "body": {}
+    },
+    {
+      "_id": "req_email_register_employer_gmail",
+      "_type": "request",
+      "parentId": "fld_email_e2e",
+      "name": "1. Register employer (Gmail получатель)",
+      "description": "Регистрирует работодателя с email {{ _.employer_email_gmail }}. Письмо об отклике уйдёт на этот адрес. Для Docker+MailHog шаг не нужен — используйте сид hr-backend@company.com и смотрите {{ _.mailhog_ui }}.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/v1/auth/register/employer",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "parameters": [],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"email\": \"{{ _.employer_email_gmail }}\",\n  \"password\": \"{{ _.password }}\"\n}"
+      }
+    },
+    {
+      "_id": "req_email_login_employer_gmail",
+      "_type": "request",
+      "parentId": "fld_email_e2e",
+      "name": "2. Login employer (Gmail) → employer_token",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/v1/auth/login",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "parameters": [],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"email\": \"{{ _.employer_email_gmail }}\",\n  \"password\": \"{{ _.password }}\"\n}"
+      }
+    },
+    {
+      "_id": "req_email_create_vacancy_gmail",
+      "_type": "request",
+      "parentId": "fld_email_e2e",
+      "name": "3. POST /vacancies (для Gmail-работодателя)",
+      "description": "После ответа скопируйте id вакансии в vacancy_id в окружении.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/v1/vacancies",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.employer_token }}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "parameters": [],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"title\": \"Vacancy for email test\",\n  \"requiresTest\": false\n}"
+      }
+    },
+    {
+      "_id": "req_email_login_applicant",
+      "_type": "request",
+      "parentId": "fld_email_e2e",
+      "name": "4. Login applicant → applicant_token",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/v1/auth/login",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "parameters": [],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"email\": \"{{ _.applicant_email }}\",\n  \"password\": \"{{ _.password }}\"\n}"
+      }
+    },
+    {
+      "_id": "req_email_submit_trigger",
+      "_type": "request",
+      "parentId": "fld_email_e2e",
+      "name": "5. POST /applications/submit → триггер email",
+      "description": "После успеха подождите ~5–10 сек (outbox scheduler). Docker+MailHog: откройте {{ _.mailhog_ui }}. Реальный Gmail: docker compose -f docker-compose.yml -f docker-compose.gmail.yml + .env.gmail.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/v1/applications/submit",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.applicant_token }}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "parameters": [],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"vacancyId\": {{ _.vacancy_id }},\n  \"resumeId\": {{ _.resume_id }}\n}"
+      }
+    },
+    {
+      "_id": "req_email_submit_seed_vacancy",
+      "_type": "request",
+      "parentId": "fld_email_e2e",
+      "name": "5b. Submit на сидовую vacancy 1 (MailHog, hr-backend@company.com)",
+      "description": "Быстрый тест без регистрации Gmail-работодателя. Письмо смотреть в MailHog UI.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/v1/applications/submit",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.applicant_token }}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "parameters": [],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"vacancyId\": 1,\n  \"resumeId\": 1\n}"
+      }
     }
   ]
 }
