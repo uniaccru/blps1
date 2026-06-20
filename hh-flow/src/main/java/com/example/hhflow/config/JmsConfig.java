@@ -1,6 +1,5 @@
 package com.example.hhflow.config;
 
-import com.example.hhflow.messaging.EmployerEmailJmsListener;
 import com.rabbitmq.jms.admin.RMQConnectionFactory;
 import jakarta.jms.ConnectionFactory;
 import org.slf4j.Logger;
@@ -10,7 +9,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jms.annotation.EnableJms;
-import org.springframework.jms.listener.DefaultMessageListenerContainer;
 import org.springframework.jms.config.DefaultJmsListenerContainerFactory;
 import org.springframework.jms.core.JmsTemplate;
 
@@ -42,25 +40,9 @@ public class JmsConfig {
     public DefaultJmsListenerContainerFactory jmsListenerContainerFactory(ConnectionFactory connectionFactory) {
         DefaultJmsListenerContainerFactory factory = new DefaultJmsListenerContainerFactory();
         factory.setConnectionFactory(connectionFactory);
+        factory.setConcurrency("1");
+        factory.setRecoveryInterval(5000L);
+        factory.setErrorHandler(t -> log.error("JMS listener error", t));
         return factory;
-    }
-
-    @Bean
-    public DefaultMessageListenerContainer employerEmailListenerContainer(
-            ConnectionFactory connectionFactory,
-            HhMessagingProperties properties,
-            EmployerEmailJmsListener listener
-    ) {
-        System.out.println("[JMS-CONFIG] Configuring JMS listener container for queue " + properties.getEmail().getQueue());
-        log.info("Configuring JMS listener container for queue {}", properties.getEmail().getQueue());
-        DefaultMessageListenerContainer container = new DefaultMessageListenerContainer();
-        container.setConnectionFactory(connectionFactory);
-        container.setDestinationName(properties.getEmail().getQueue());
-        container.setMessageListener(listener);
-        container.setAutoStartup(true);
-        container.setConcurrentConsumers(1);
-        container.setRecoveryInterval(5000L);
-        container.setErrorHandler(t -> log.error("JMS listener error", t));
-        return container;
     }
 }
