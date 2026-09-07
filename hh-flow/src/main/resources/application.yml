@@ -69,6 +69,10 @@ hh:
     batch-size: 50
     max-retries: 5
 
+camunda:
+  engine-rest-url: http://localhost:8080/engine-rest
+  worker-id: hh-flow-worker
+
 demo:
   # Set this to a vacancy ID to force a rollback after notification save.
   # Use -1 to keep the demo rollback disabled.
