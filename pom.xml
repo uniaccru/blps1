@@ -19,30 +19,12 @@
     <description>Business process: candidate response to vacancy</description>
 
     <modules>
-        <module>odoo-connector</module>
         <module>hh-flow</module>
     </modules>
 
     <properties>
         <java.version>17</java.version>
         <maven.compiler.release>17</maven.compiler.release>
-        <jakarta.resource.version>2.1.0</jakarta.resource.version>
     </properties>
 
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>com.example</groupId>
-                <artifactId>odoo-connector</artifactId>
-                <version>${project.version}</version>
-                <type>jar</type>
-                <classifier>api</classifier>
-            </dependency>
-            <dependency>
-                <groupId>jakarta.resource</groupId>
-                <artifactId>jakarta.resource-api</artifactId>
-                <version>${jakarta.resource.version}</version>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
 </project>

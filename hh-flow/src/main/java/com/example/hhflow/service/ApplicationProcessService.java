@@ -33,7 +33,6 @@ public class ApplicationProcessService {
     private final ResumeCreationSubprocessService resumeCreationSubprocessService;
     private final TestSubprocessService testSubprocessService;
     private final ApiMapper apiMapper;
-    private final OdooApplicantSyncService odooApplicantSyncService;
     private static final Logger log = LoggerFactory.getLogger(ApplicationProcessService.class);
 
     @Transactional
@@ -81,7 +80,6 @@ public class ApplicationProcessService {
                 vacancy,
                 resume
         );
-        odooApplicantSyncService.syncApplicant(app);
         notificationService.notifyEmployer(app);
         JobApplication application = jobApplicationService.markEmployerNotified(app);
 
