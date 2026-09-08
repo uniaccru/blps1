@@ -30,3 +30,7 @@ spring:
 
 demo:
   rollback-vacancy-id: -1
+
+camunda:
+  engine-rest-url: ${CAMUNDA_ENGINE_REST_URL:http://localhost:8081/engine-rest}
+  worker-id: hh-flow-worker

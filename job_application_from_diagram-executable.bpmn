@@ -1,27 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" id="Definitions_JobApplication" targetNamespace="http://example.com/bpmn/job-application" exporter="Camunda Modeler" exporterVersion="5.50.1">
   <bpmn:error id="Error_ApplicationTransaction" name="ApplicationTransactionFailed" errorCode="APPLICATION_TX_FAILED" />
-  <bpmn:process id="Process_JobApplication" name="Отклик на вакансию" isExecutable="true">
+  <bpmn:process id="Process_JobApplication" name="Отклик на вакансию" isExecutable="true" camunda:historyTimeToLive="180">
     <bpmn:laneSet id="LaneSet_Main">
       <bpmn:lane id="Lane_Employer" name="Работодатель">
         <bpmn:flowNodeRef>Task_ReviewApplication</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>Task_FillVacancy</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>Start_CreateVacancy</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>End_AccessDenied</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>End_VacancyPublished</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>End_ReviewComplete</bpmn:flowNodeRef>
       </bpmn:lane>
       <bpmn:lane id="Lane_System" name="Система">
         <bpmn:flowNodeRef>Task_CheckVacancyStatus</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>Task_CheckResume</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>Task_CheckTestRequirements</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>Task_CheckRole</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>Task_PublishVacancy</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>Task_CheckToken</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>Gateway_VacancyActive</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>Gateway_ResumeExists</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>Gateway_TestRequired</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>Gateway_RoleConfirmed</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>Gateway_Authorized</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>Task_NotifyCandidateError</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>End_ApplicationFailed</bpmn:flowNodeRef>
@@ -40,7 +33,9 @@
       </bpmn:lane>
     </bpmn:laneSet>
     <bpmn:startEvent id="Start_Apply" name="Нажатие «Откликнуться»" />
-    <bpmn:task id="Task_SendRequest" name="Отправка запроса" />
+    <bpmn:scriptTask id="Task_SendRequest" name="Отправка запроса" scriptFormat="groovy">
+      <bpmn:script></bpmn:script>
+    </bpmn:scriptTask>
     <bpmn:serviceTask id="Task_CheckToken" name="Проверка токена авторизации" camunda:type="external" camunda:topic="checkToken" />
     <bpmn:callActivity id="Task_PhoneAuth" name="Авторизация по номеру телефона" calledElement="Process_PhoneAuthorization" />
     <bpmn:exclusiveGateway id="Gateway_Authorized" name="Пользователь авторизован?" />
@@ -70,28 +65,14 @@
     <bpmn:exclusiveGateway id="Gateway_TestPassed" name="Тест пройден успешно?" />
     <bpmn:endEvent id="End_AutoReject" name="Автоматический отказ" />
     <bpmn:serviceTask id="Subprocess_ApplicationTransaction" name="Транзакция: фиксация отклика" camunda:type="external" camunda:topic="registerApplicationTx">
-      <bpmn:outgoing>Flow_19</bpmn:outgoing>
+      <bpmn:outgoing>Flow_21</bpmn:outgoing>
     </bpmn:serviceTask>
     <bpmn:boundaryEvent id="Boundary_TransactionError" name="Ошибка транзакции" attachedToRef="Subprocess_ApplicationTransaction">
+      <bpmn:outgoing>Flow_19</bpmn:outgoing>
       <bpmn:errorEventDefinition id="ErrorDef_Transaction" errorRef="Error_ApplicationTransaction" />
     </bpmn:boundaryEvent>
     <bpmn:serviceTask id="Task_NotifyCandidateError" name="Уведомление соискателя об ошибке/сбое транзакции" camunda:type="external" camunda:topic="notifyCandidateError" />
     <bpmn:endEvent id="End_ApplicationFailed" name="Отклик не удался" />
-    <bpmn:startEvent id="Start_CreateVacancy" name="Создание вакансии" />
-    <bpmn:userTask id="Task_FillVacancy" name="Заполнение данных вакансии" camunda:candidateGroups="EMPLOYER">
-      <bpmn:extensionElements>
-        <camunda:formData>
-          <camunda:formField id="title" label="Название вакансии" type="string" />
-          <camunda:formField id="description" label="Описание" type="string" />
-          <camunda:formField id="requiresTest" label="Требуется тест" type="boolean" defaultValue="false" />
-        </camunda:formData>
-      </bpmn:extensionElements>
-    </bpmn:userTask>
-    <bpmn:serviceTask id="Task_CheckRole" name="Проверка роли" camunda:type="external" camunda:topic="checkRole" />
-    <bpmn:exclusiveGateway id="Gateway_RoleConfirmed" name="Роль подтверждена?" />
-    <bpmn:endEvent id="End_AccessDenied" name="Отказ в доступе" />
-    <bpmn:serviceTask id="Task_PublishVacancy" name="Публикация вакансии" camunda:type="external" camunda:topic="publishVacancy" />
-    <bpmn:endEvent id="End_VacancyPublished" name="Вакансия опубликована" />
     <bpmn:userTask id="Task_ReviewApplication" name="Рассмотрение отклика" camunda:candidateGroups="EMPLOYER">
       <bpmn:extensionElements>
         <camunda:formData>
@@ -143,10 +124,35 @@
     <bpmn:sequenceFlow id="Flow_18" name="Нет" sourceRef="Gateway_TestRequired" targetRef="Subprocess_ApplicationTransaction">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${testRequired == false}</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
-    <bpmn:sequenceFlow id="Flow_19" sourceRef="Subprocess_ApplicationTransaction" targetRef="Task_NotifyCandidateError" />
+    <bpmn:sequenceFlow id="Flow_19" sourceRef="Boundary_TransactionError" targetRef="Task_NotifyCandidateError" />
     <bpmn:sequenceFlow id="Flow_20" sourceRef="Task_NotifyCandidateError" targetRef="End_ApplicationFailed" />
     <bpmn:sequenceFlow id="Flow_21" sourceRef="Subprocess_ApplicationTransaction" targetRef="Task_ReviewApplication" />
     <bpmn:sequenceFlow id="Flow_22" sourceRef="Task_ReviewApplication" targetRef="End_ReviewComplete" />
+    <bpmn:dataStoreReference id="DataStore_DB" name="БД" />
+    <bpmn:serviceTask id="Activity_0r6to5d" name="Создание резюме" camunda:type="external" camunda:topic="createResume">
+      <bpmn:incoming>Flow_10</bpmn:incoming>
+      <bpmn:outgoing>Flow_06ic0ax</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_06ic0ax" sourceRef="Activity_0r6to5d" targetRef="Task_CheckTestRequirements" />
+    <bpmn:association id="Assoc_CheckVacancy_DB" sourceRef="DataStore_DB" targetRef="Task_CheckVacancyStatus" />
+    <bpmn:association id="Assoc_CheckResume_DB" sourceRef="DataStore_DB" targetRef="Task_CheckResume" />
+  </bpmn:process>
+  <bpmn:process id="Process_CreateVacancy" name="Создание вакансии" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:startEvent id="Start_CreateVacancy" name="Создание вакансии" />
+    <bpmn:userTask id="Task_FillVacancy" name="Заполнение данных вакансии" camunda:candidateGroups="EMPLOYER">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="title" label="Название вакансии" type="string" />
+          <camunda:formField id="description" label="Описание" type="string" />
+          <camunda:formField id="requiresTest" label="Требуется тест" type="boolean" defaultValue="false" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="Task_CheckRole" name="Проверка роли" camunda:type="external" camunda:topic="checkRole" />
+    <bpmn:exclusiveGateway id="Gateway_RoleConfirmed" name="Роль подтверждена?" />
+    <bpmn:endEvent id="End_AccessDenied" name="Отказ в доступе" />
+    <bpmn:serviceTask id="Task_PublishVacancy" name="Публикация вакансии" camunda:type="external" camunda:topic="publishVacancy" />
+    <bpmn:endEvent id="End_VacancyPublished" name="Вакансия опубликована" />
     <bpmn:sequenceFlow id="Flow_V1" sourceRef="Start_CreateVacancy" targetRef="Task_FillVacancy" />
     <bpmn:sequenceFlow id="Flow_V2" sourceRef="Task_FillVacancy" targetRef="Task_CheckRole" />
     <bpmn:sequenceFlow id="Flow_V3" sourceRef="Task_CheckRole" targetRef="Gateway_RoleConfirmed" />
@@ -157,17 +163,8 @@
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${roleConfirmed == true}</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
     <bpmn:sequenceFlow id="Flow_V6" sourceRef="Task_PublishVacancy" targetRef="End_VacancyPublished" />
-    <bpmn:dataStoreReference id="DataStore_DB" name="БД" />
-    <bpmn:serviceTask id="Activity_0r6to5d" name="Создание резюме" camunda:type="external" camunda:topic="createResume">
-      <bpmn:incoming>Flow_10</bpmn:incoming>
-      <bpmn:outgoing>Flow_06ic0ax</bpmn:outgoing>
-    </bpmn:serviceTask>
-    <bpmn:sequenceFlow id="Flow_06ic0ax" sourceRef="Activity_0r6to5d" targetRef="Task_CheckTestRequirements" />
-    <bpmn:association id="Assoc_Publish_DB" sourceRef="Task_PublishVacancy" targetRef="DataStore_DB" />
-    <bpmn:association id="Assoc_CheckVacancy_DB" sourceRef="DataStore_DB" targetRef="Task_CheckVacancyStatus" />
-    <bpmn:association id="Assoc_CheckResume_DB" sourceRef="DataStore_DB" targetRef="Task_CheckResume" />
   </bpmn:process>
-  <bpmn:process id="Process_PhoneAuthorization" name="Авторизация по номеру телефона" isExecutable="true">
+  <bpmn:process id="Process_PhoneAuthorization" name="Авторизация по номеру телефона" isExecutable="true" camunda:historyTimeToLive="180">
     <bpmn:startEvent id="Start_Phone" />
     <bpmn:userTask id="Task_EnterPhone" name="Ввод номера телефона" camunda:candidateGroups="APPLICANT">
       <bpmn:extensionElements>
@@ -265,39 +262,6 @@
         <dc:Bounds x="1952" y="535" width="36" height="36" />
         <bpmndi:BPMNLabel>
           <dc:Bounds x="1925" y="581" width="90" height="14" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Start_CreateVacancy_di" bpmnElement="Start_CreateVacancy">
-        <dc:Bounds x="202" y="675" width="36" height="36" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="195" y="711" width="50" height="27" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Task_FillVacancy_di" bpmnElement="Task_FillVacancy">
-        <dc:Bounds x="270" y="655" width="130" height="70" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Task_CheckRole_di" bpmnElement="Task_CheckRole">
-        <dc:Bounds x="275" y="505" width="120" height="70" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Gateway_RoleConfirmed_di" bpmnElement="Gateway_RoleConfirmed" isMarkerVisible="true">
-        <dc:Bounds x="455" y="515" width="50" height="50" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="440" y="476" width="80" height="27" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="End_AccessDenied_di" bpmnElement="End_AccessDenied">
-        <dc:Bounds x="462" y="652" width="36" height="36" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="439" y="688" width="83" height="14" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Task_PublishVacancy_di" bpmnElement="Task_PublishVacancy">
-        <dc:Bounds x="585" y="505" width="130" height="70" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="End_VacancyPublished_di" bpmnElement="End_VacancyPublished">
-        <dc:Bounds x="762" y="652" width="36" height="36" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="744" y="688" width="72" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Task_ReviewApplication_di" bpmnElement="Task_ReviewApplication">
@@ -453,47 +417,10 @@
         <di:waypoint x="2375" y="693" />
         <di:waypoint x="2412" y="693" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_V1_di" bpmnElement="Flow_V1">
-        <di:waypoint x="238" y="696" />
-        <di:waypoint x="254" y="696" />
-        <di:waypoint x="254" y="680" />
-        <di:waypoint x="270" y="680" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_V2_di" bpmnElement="Flow_V2">
-        <di:waypoint x="335" y="655" />
-        <di:waypoint x="335" y="575" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_V3_di" bpmnElement="Flow_V3">
-        <di:waypoint x="395" y="540" />
-        <di:waypoint x="455" y="540" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_V4_di" bpmnElement="Flow_V4">
-        <di:waypoint x="486" y="559" />
-        <di:waypoint x="486" y="653" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="487" y="573" width="46" height="14" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_V5_di" bpmnElement="Flow_V5">
-        <di:waypoint x="505" y="540" />
-        <di:waypoint x="585" y="540" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="522" y="523" width="14" height="14" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_V6_di" bpmnElement="Flow_V6">
-        <di:waypoint x="715" y="540" />
-        <di:waypoint x="780" y="540" />
-        <di:waypoint x="780" y="652" />
-      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_06ic0ax_di" bpmnElement="Flow_06ic0ax">
         <di:waypoint x="1170" y="153" />
         <di:waypoint x="1220" y="153" />
         <di:waypoint x="1220" y="270" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Assoc_Publish_DB_di" bpmnElement="Assoc_Publish_DB">
-        <di:waypoint x="650" y="575" />
-        <di:waypoint x="1294" y="785" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Assoc_CheckVacancy_DB_di" bpmnElement="Assoc_CheckVacancy_DB">
         <di:waypoint x="1280" y="785" />
@@ -502,6 +429,55 @@
       <bpmndi:BPMNEdge id="Assoc_CheckResume_DB_di" bpmnElement="Assoc_CheckResume_DB">
         <di:waypoint x="1280" y="785" />
         <di:waypoint x="960" y="340" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_CreateVacancy">
+    <bpmndi:BPMNPlane id="BPMNPlane_CreateVacancy" bpmnElement="Process_CreateVacancy">
+      <bpmndi:BPMNShape id="Start_CreateVacancy_di" bpmnElement="Start_CreateVacancy">
+        <dc:Bounds x="202" y="180" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_FillVacancy_di" bpmnElement="Task_FillVacancy">
+        <dc:Bounds x="270" y="160" width="130" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CheckRole_di" bpmnElement="Task_CheckRole">
+        <dc:Bounds x="430" y="160" width="120" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_RoleConfirmed_di" bpmnElement="Gateway_RoleConfirmed" isMarkerVisible="true">
+        <dc:Bounds x="580" y="175" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_AccessDenied_di" bpmnElement="End_AccessDenied">
+        <dc:Bounds x="587" y="280" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_PublishVacancy_di" bpmnElement="Task_PublishVacancy">
+        <dc:Bounds x="680" y="160" width="130" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_VacancyPublished_di" bpmnElement="End_VacancyPublished">
+        <dc:Bounds x="860" y="180" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_V1_di" bpmnElement="Flow_V1">
+        <di:waypoint x="238" y="198" />
+        <di:waypoint x="270" y="195" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_V2_di" bpmnElement="Flow_V2">
+        <di:waypoint x="400" y="195" />
+        <di:waypoint x="430" y="195" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_V3_di" bpmnElement="Flow_V3">
+        <di:waypoint x="550" y="195" />
+        <di:waypoint x="580" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_V4_di" bpmnElement="Flow_V4">
+        <di:waypoint x="605" y="225" />
+        <di:waypoint x="605" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_V5_di" bpmnElement="Flow_V5">
+        <di:waypoint x="630" y="200" />
+        <di:waypoint x="680" y="195" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_V6_di" bpmnElement="Flow_V6">
+        <di:waypoint x="810" y="195" />
+        <di:waypoint x="860" y="198" />
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>

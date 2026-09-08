@@ -25,6 +25,10 @@ public class NotificationService {
     @Value("${demo.rollback-vacancy-id:-1}")
     private Long demoRollbackVacancyId;
 
+    public void notifyCandidateError(Long applicantUserId, String errorMessage) {
+        log.warn("Candidate {} notified about error: {}", applicantUserId, errorMessage);
+    }
+
     public void notifyEmployer(JobApplication application) {
         log.info("Employer {} notified about application {}", application.getVacancy().getEmployer().getEmail(), application.getId());
 
