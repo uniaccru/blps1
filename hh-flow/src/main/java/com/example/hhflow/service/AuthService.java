@@ -5,6 +5,7 @@ import com.example.hhflow.dto.request.RefreshTokenRequest;
 import com.example.hhflow.dto.request.RegisterApplicantRequest;
 import com.example.hhflow.dto.request.RegisterEmployerRequest;
 import com.example.hhflow.dto.response.AuthResponse;
+import com.example.hhflow.camunda.CamundaIdentitySyncService;
 import com.example.hhflow.exception.BusinessException;
 import com.example.hhflow.model.Role;
 import com.example.hhflow.model.User;
@@ -23,6 +24,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final CamundaIdentitySyncService camundaIdentitySyncService;
 
     @Transactional
     public AuthResponse registerEmployer(RegisterEmployerRequest request) {
@@ -39,6 +41,7 @@ public class AuthService {
 
         User persisted = userRepository.findByEmail(user.getEmail())
                 .orElseThrow(() -> new IllegalStateException("User not persisted"));
+        camundaIdentitySyncService.syncUser(persisted, request.getPassword());
         return tokensFor(persisted);
     }
 
@@ -57,6 +60,7 @@ public class AuthService {
 
         User persisted = userRepository.findByEmail(user.getEmail())
                 .orElseThrow(() -> new IllegalStateException("User not persisted"));
+        camundaIdentitySyncService.syncUser(persisted, request.getPassword());
         return tokensFor(persisted);
     }
 

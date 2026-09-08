@@ -34,3 +34,7 @@ demo:
 camunda:
   engine-rest-url: ${CAMUNDA_ENGINE_REST_URL:http://localhost:8081/engine-rest}
   worker-id: hh-flow-worker
+  rest-username: ${CAMUNDA_REST_USERNAME:}
+  rest-password: ${CAMUNDA_REST_PASSWORD:}
+  identity-sync-enabled: ${CAMUNDA_IDENTITY_SYNC_ENABLED:true}
+  identity-sync-initial-password: ${CAMUNDA_IDENTITY_SYNC_INITIAL_PASSWORD:password}
