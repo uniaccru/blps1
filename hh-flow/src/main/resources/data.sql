@@ -7,11 +7,11 @@ VALUES
     (4, NULL, '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'APPLICANT', 'ivan.petrov@example.com'),
     (5, NULL, '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'APPLICANT', 'maria.sokolova@example.com');
 
-INSERT INTO vacancies (id, title, status, requires_test, employer_id)
+INSERT INTO vacancies (id, title, description, status, requires_test, employer_id)
 VALUES
-    (1, 'Java Backend Developer', 'ACTIVE', false, 1),
-    (2, 'Middle QA Engineer', 'ACTIVE', true, 2),
-    (3, 'Data Analyst', 'ARCHIVED', false, 3);
+    (1, 'Java Backend Developer', 'Разработка backend-сервисов на Java и Spring', 'ACTIVE', false, 1),
+    (2, 'Middle QA Engineer', 'Тестирование web-приложений и API', 'ACTIVE', true, 2),
+    (3, 'Data Analyst', 'Аналитика продуктовых и бизнес-данных', 'ARCHIVED', false, 3);
 
 INSERT INTO resumes (id, user_id, full_name, summary, created_at)
 VALUES

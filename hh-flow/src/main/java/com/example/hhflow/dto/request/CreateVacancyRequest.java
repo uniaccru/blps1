@@ -16,6 +16,10 @@ public class CreateVacancyRequest {
         @Size(max = ValidationConstraints.TITLE_MAX_LENGTH, message = "must be at most {max} characters")
         private String title;
 
+        @NotBlank(message = "must not be blank")
+        @Size(max = ValidationConstraints.SUMMARY_MAX_LENGTH, message = "must be at most {max} characters")
+        private String description;
+
         @NotNull(message = "must not be null")
         private Boolean requiresTest;
 }

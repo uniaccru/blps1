@@ -27,10 +27,12 @@ public class PublishVacancyHandler implements TopicExternalTaskHandler {
     public void execute(ExternalTask externalTask, ExternalTaskService externalTaskService) {
         Long employerUserId = ExternalTaskVariables.getLong(externalTask, "employerUserId");
         String title = ExternalTaskVariables.getString(externalTask, "title");
+        String description = ExternalTaskVariables.getString(externalTask, "description");
         Boolean requiresTest = ExternalTaskVariables.getBoolean(externalTask, "requiresTest");
 
         CreateVacancyRequest request = new CreateVacancyRequest();
         request.setTitle(title);
+        request.setDescription(description);
         request.setRequiresTest(requiresTest);
 
         Vacancy vacancy = vacancyService.create(request, employerUserId);

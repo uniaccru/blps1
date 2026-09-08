@@ -39,6 +39,7 @@ public class VacancyService {
 
         Vacancy vacancy = new Vacancy();
         vacancy.setTitle(request.getTitle());
+        vacancy.setDescription(request.getDescription());
         vacancy.setRequiresTest(request.getRequiresTest());
         vacancy.setEmployer(employer);
         vacancy.setStatus(VacancyStatus.ACTIVE);
