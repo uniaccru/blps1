@@ -1,6 +1,7 @@
 package com.example.hhflow.camunda.handler;
 
 import com.example.hhflow.camunda.ExternalTaskVariables;
+import com.example.hhflow.camunda.CamundaIdentitySyncService;
 import com.example.hhflow.camunda.TopicExternalTaskHandler;
 import com.example.hhflow.model.Vacancy;
 import com.example.hhflow.model.VacancyStatus;
@@ -11,6 +12,7 @@ import org.camunda.bpm.client.task.ExternalTaskService;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
+import java.util.HashMap;
 
 @Component
 @RequiredArgsConstructor
@@ -28,6 +30,11 @@ public class CheckVacancyStatusHandler implements TopicExternalTaskHandler {
         Long vacancyId = ExternalTaskVariables.getLong(externalTask, "vacancyId");
         Vacancy vacancy = vacancyService.getById(vacancyId);
         boolean vacancyActive = vacancy.getStatus() != VacancyStatus.ARCHIVED;
-        externalTaskService.complete(externalTask, Map.of("vacancyActive", vacancyActive));
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("vacancyActive", vacancyActive);
+        if (vacancy.getEmployer() != null) {
+            variables.put("employerCamundaUserId", CamundaIdentitySyncService.camundaUserId(vacancy.getEmployer()));
+        }
+        externalTaskService.complete(externalTask, variables);
     }
 }

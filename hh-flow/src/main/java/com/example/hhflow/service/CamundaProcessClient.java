@@ -6,6 +6,9 @@ import com.example.hhflow.dto.response.ApplicationDto;
 import com.example.hhflow.dto.response.SubmissionResponse;
 import com.example.hhflow.mapper.ApiMapper;
 import com.example.hhflow.model.SubmissionOutcome;
+import com.example.hhflow.model.User;
+import com.example.hhflow.model.Vacancy;
+import com.example.hhflow.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -27,12 +30,17 @@ public class CamundaProcessClient {
 
     private final CamundaProperties properties;
     private final JobApplicationService jobApplicationService;
+    private final VacancyService vacancyService;
+    private final UserRepository userRepository;
     private final ApiMapper apiMapper;
     private final RestTemplate restTemplate = new RestTemplate();
 
     public SubmissionResponse submitApplication(SubmitApplicationRequest request, Long applicantUserId) {
+        Vacancy vacancy = vacancyService.getById(request.getVacancyId());
         Map<String, Object> variables = new HashMap<>();
         variables.put("applicantUserId", variable(applicantUserId, "Long"));
+        variables.put("applicantCamundaUserId", variable(camundaUserId(applicantUserId), "String"));
+        variables.put("employerCamundaUserId", variable(camundaUserId(vacancy.getEmployer()), "String"));
         variables.put("vacancyId", variable(request.getVacancyId(), "Long"));
         variables.put("resumeId", variable(request.getResumeId(), "Long"));
         variables.put("resumeFullName", variable(request.getResumeFullName(), "String"));
@@ -43,9 +51,24 @@ public class CamundaProcessClient {
     }
 
     public String startVacancyProcess(Long employerUserId) {
+        User employer = userRepository.findById(employerUserId)
+                .orElseThrow(() -> new IllegalStateException("Employer not found: " + employerUserId));
         return startProcess("Process_CreateVacancy", Map.of(
-                "employerUserId", variable(employerUserId, "Long")
+                "employerUserId", variable(employerUserId, "Long"),
+                "employerCamundaUserId", variable(camundaUserId(employer), "String")
         ));
+    }
+
+    private String camundaUserId(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalStateException("User not found: " + userId));
+        return camundaUserId(user);
+    }
+
+    private String camundaUserId(User user) {
+        String email = user.getEmail() == null ? "" : user.getEmail().trim().toLowerCase();
+        String normalized = email.replaceAll("[^a-z0-9]", "");
+        return normalized.isBlank() ? "user" + user.getId() : normalized;
     }
 
     private String startProcess(String processDefinitionKey, Map<String, Object> variables) {

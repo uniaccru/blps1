@@ -23,6 +23,7 @@
       </bpmn:lane>
       <bpmn:lane id="Lane_Candidate" name="Соискатель">
         <bpmn:flowNodeRef>Task_SendRequest</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_InitializeApplicant</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>Task_PhoneAuth</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>Task_TakeTest</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>Boundary_TestTimeout</bpmn:flowNodeRef>
@@ -32,10 +33,23 @@
         <bpmn:flowNodeRef>Gateway_TestPassed</bpmn:flowNodeRef>
       </bpmn:lane>
     </bpmn:laneSet>
-    <bpmn:startEvent id="Start_Apply" name="Нажатие «Откликнуться»" />
-    <bpmn:scriptTask id="Task_SendRequest" name="Отправка запроса" scriptFormat="groovy">
-      <bpmn:script></bpmn:script>
-    </bpmn:scriptTask>
+    <bpmn:startEvent id="Start_Apply" name="Нажатие «Откликнуться»" camunda:initiator="starterUserId" />
+    <bpmn:userTask id="Task_SendRequest" name="Отправка запроса" camunda:candidateGroups="APPLICANT" camunda:assignee="${execution.hasVariable(&#39;applicantCamundaUserId&#39;) ? applicantCamundaUserId : starterUserId}">
+      <bpmn:extensionElements>
+        <camunda:taskListener event="create">
+          <camunda:script scriptFormat="groovy">task.setVariable("requestTaskCreatedAt", new java.util.Date().toInstant().toString())</camunda:script>
+        </camunda:taskListener>
+        <camunda:formData>
+          <camunda:formField id="vacancyId" label="ID вакансии" type="long">
+            <camunda:validation><camunda:constraint name="required" /></camunda:validation>
+          </camunda:formField>
+          <camunda:formField id="resumeId" label="ID резюме" type="long" />
+          <camunda:formField id="resumeFullName" label="Имя в резюме" type="string" />
+          <camunda:formField id="resumeSummary" label="Описание резюме" type="string" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="Task_InitializeApplicant" name="Определить кандидата процесса" camunda:type="external" camunda:topic="initializeApplicant" />
     <bpmn:serviceTask id="Task_CheckToken" name="Проверка токена авторизации" camunda:type="external" camunda:topic="checkToken" />
     <bpmn:callActivity id="Task_PhoneAuth" name="Авторизация по номеру телефона" calledElement="Process_PhoneAuthorization" />
     <bpmn:exclusiveGateway id="Gateway_Authorized" name="Пользователь авторизован?" />
@@ -73,7 +87,7 @@
     </bpmn:boundaryEvent>
     <bpmn:serviceTask id="Task_NotifyCandidateError" name="Уведомление соискателя об ошибке/сбое транзакции" camunda:type="external" camunda:topic="notifyCandidateError" />
     <bpmn:endEvent id="End_ApplicationFailed" name="Отклик не удался" />
-    <bpmn:userTask id="Task_ReviewApplication" name="Рассмотрение отклика" camunda:candidateGroups="EMPLOYER">
+    <bpmn:userTask id="Task_ReviewApplication" name="Рассмотрение отклика" camunda:candidateGroups="EMPLOYER" camunda:assignee="${employerCamundaUserId}">
       <bpmn:extensionElements>
         <camunda:formData>
           <camunda:formField id="decision" label="Решение" type="enum">
@@ -86,7 +100,8 @@
     </bpmn:userTask>
     <bpmn:endEvent id="End_ReviewComplete" name="Отклик успешно завершен" />
     <bpmn:sequenceFlow id="Flow_1" sourceRef="Start_Apply" targetRef="Task_SendRequest" />
-    <bpmn:sequenceFlow id="Flow_2" sourceRef="Task_SendRequest" targetRef="Task_CheckToken" />
+    <bpmn:sequenceFlow id="Flow_2" sourceRef="Task_SendRequest" targetRef="Task_InitializeApplicant" />
+    <bpmn:sequenceFlow id="Flow_2a" sourceRef="Task_InitializeApplicant" targetRef="Task_CheckToken" />
     <bpmn:sequenceFlow id="Flow_3" sourceRef="Task_CheckToken" targetRef="Gateway_Authorized" />
     <bpmn:sequenceFlow id="Flow_4" name="Нет" sourceRef="Gateway_Authorized" targetRef="Task_PhoneAuth">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${authorized == false}</bpmn:conditionExpression>
@@ -139,8 +154,11 @@
   </bpmn:process>
   <bpmn:process id="Process_CreateVacancy" name="Создание вакансии" isExecutable="true" camunda:historyTimeToLive="180">
     <bpmn:startEvent id="Start_CreateVacancy" name="Создание вакансии" />
-    <bpmn:userTask id="Task_FillVacancy" name="Заполнение данных вакансии" camunda:candidateGroups="EMPLOYER">
+    <bpmn:userTask id="Task_FillVacancy" name="Заполнение данных вакансии" camunda:candidateGroups="EMPLOYER" camunda:assignee="${employerCamundaUserId}">
       <bpmn:extensionElements>
+        <camunda:taskListener event="create">
+          <camunda:script scriptFormat="groovy">task.setVariable("vacancyFormTaskCreatedAt", new java.util.Date().toInstant().toString())</camunda:script>
+        </camunda:taskListener>
         <camunda:formData>
           <camunda:formField id="title" label="Название вакансии" type="string" />
           <camunda:formField id="description" label="Описание" type="string" />
@@ -166,7 +184,7 @@
   </bpmn:process>
   <bpmn:process id="Process_PhoneAuthorization" name="Авторизация по номеру телефона" isExecutable="true" camunda:historyTimeToLive="180">
     <bpmn:startEvent id="Start_Phone" />
-    <bpmn:userTask id="Task_EnterPhone" name="Ввод номера телефона" camunda:candidateGroups="APPLICANT">
+    <bpmn:userTask id="Task_EnterPhone" name="Ввод номера телефона" camunda:candidateGroups="APPLICANT" camunda:assignee="${applicantCamundaUserId}">
       <bpmn:extensionElements>
         <camunda:formData>
           <camunda:formField id="phoneNumber" label="Номер телефона" type="string" />
