@@ -23,6 +23,9 @@ public class Vacancy {
     @Column(nullable = false, length = ValidationConstraints.TITLE_MAX_LENGTH)
     private String title;
 
+    @Column(nullable = false, length = ValidationConstraints.SUMMARY_MAX_LENGTH)
+    private String description;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private VacancyStatus status;
@@ -48,6 +51,14 @@ public class Vacancy {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public VacancyStatus getStatus() {

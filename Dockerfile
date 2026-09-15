@@ -2,7 +2,6 @@ FROM maven:3.9.9-eclipse-temurin-17 AS builder
 WORKDIR /app
 
 COPY pom.xml .
-COPY odoo-connector ./odoo-connector
 COPY hh-flow ./hh-flow
 
 RUN mvn -q -DskipTests -Pdocker package -pl hh-flow -am

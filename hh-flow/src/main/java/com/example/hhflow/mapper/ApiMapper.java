@@ -25,6 +25,7 @@ public class ApiMapper {
         return new VacancyDto(
                 vacancy.getId(),
                 vacancy.getTitle(),
+                vacancy.getDescription(),
                 vacancy.getStatus(),
                 vacancy.isRequiresTest(),
                 vacancy.getEmployer().getEmail()

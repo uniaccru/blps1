@@ -33,7 +33,6 @@ public class ApplicationProcessService {
     private final ResumeCreationSubprocessService resumeCreationSubprocessService;
     private final TestSubprocessService testSubprocessService;
     private final ApiMapper apiMapper;
-    private final OdooApplicantSyncService odooApplicantSyncService;
     private static final Logger log = LoggerFactory.getLogger(ApplicationProcessService.class);
 
     @Transactional
@@ -76,14 +75,8 @@ public class ApplicationProcessService {
             }
         }
 
-        JobApplication app = jobApplicationService.createCompleted(
-                applicantUserId,
-                vacancy,
-                resume
-        );
-        odooApplicantSyncService.syncApplicant(app);
-        notificationService.notifyEmployer(app);
-        JobApplication application = jobApplicationService.markEmployerNotified(app);
+        Long applicationId = registerApplicationTx(applicantUserId, request.getVacancyId(), resume.getId());
+        JobApplication application = jobApplicationService.getById(applicationId);
 
         if (application != null) {
             log.info("Application processed for applicationId={}", application.getId());
@@ -99,6 +92,16 @@ public class ApplicationProcessService {
             applicationDto
         );
 
+    }
+
+    @Transactional
+    public Long registerApplicationTx(Long applicantUserId, Long vacancyId, Long resumeId) {
+        Vacancy vacancy = vacancyService.getById(vacancyId);
+        Resume resume = resumeService.getByIdAndApplicant(resumeId, applicantUserId);
+        JobApplication app = jobApplicationService.createCompleted(applicantUserId, vacancy, resume);
+        notificationService.notifyEmployer(app);
+        jobApplicationService.markEmployerNotified(app);
+        return app.getId();
     }
 
     private Optional<Resume> resolveResume(SubmitApplicationRequest request, Long applicantUserId) {

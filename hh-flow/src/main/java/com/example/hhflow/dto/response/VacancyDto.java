@@ -10,6 +10,7 @@ public class VacancyDto {
 
         private final Long id;
         private final String title;
+        private final String description;
         private final VacancyStatus status;
         private final boolean requiresTest;
         private final String employerEmail;

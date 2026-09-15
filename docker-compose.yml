@@ -16,63 +16,20 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-  rabbitmq:
-    image: rabbitmq:3.13-management-alpine
-    container_name: hh-flow-rabbitmq
-    hostname: rabbitmq
-    user: "999:999"
-    environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
+  camunda:
+    image: camunda/camunda-bpm-platform:run-7.20.0
+    container_name: hh-flow-camunda
+    command: ["./camunda.sh", "--webapps", "--rest"]
     ports:
-      - "5672:5672"
-      - "15672:15672"
+      - "8081:8080"
+    volumes:
+      - ./job_application_from_diagram-executable.bpmn:/camunda/configuration/resources/job_application.bpmn
     healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      test: ["CMD-SHELL", "wget -q -O - http://localhost:8080/engine-rest/engine >/dev/null 2>&1 || exit 1"]
       interval: 10s
-      timeout: 10s
-      retries: 12
-      start_period: 40s
-
-  mailhog:
-    image: mailhog/mailhog:v1.0.1
-    container_name: hh-flow-mailhog
-    ports:
-      - "1025:1025"
-      - "8025:8025"
-
-  odoo-db:
-    image: postgres:15
-    container_name: hh-flow-odoo-db
-    environment:
-      POSTGRES_USER: odoo
-      POSTGRES_PASSWORD: odoo
-      POSTGRES_DB: postgres
-    volumes:
-      - odoo_db_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U odoo -d postgres"]
-      interval: 5s
       timeout: 5s
-      retries: 10
-
-  odoo:
-    image: odoo:17.0
-    container_name: hh-flow-odoo
-    depends_on:
-      odoo-db:
-        condition: service_healthy
-    ports:
-      - "8069:8069"
-    environment:
-      HOST: odoo-db
-      USER: odoo
-      PASSWORD: odoo
-    command: >
-      odoo --db_host=odoo-db --db_user=odoo --db_password=odoo
-           -d odoo -i hr_recruitment --without-demo=all
-    volumes:
-      - odoo_data:/var/lib/odoo
+      retries: 12
+      start_period: 30s
 
   app:
     build:
@@ -82,12 +39,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      rabbitmq:
+      camunda:
         condition: service_healthy
-      mailhog:
-        condition: service_started
-      odoo:
-        condition: service_started
     environment:
       SPRING_PROFILES_ACTIVE: docker
       DB_HOST: postgres
@@ -95,21 +48,9 @@ services:
       DB_NAME: hh_flow
       DB_USER: hh_user
       DB_PASSWORD: hh_password
-      RABBITMQ_HOST: rabbitmq
-      RABBITMQ_PORT: 5672
-      RABBITMQ_USER: guest
-      RABBITMQ_PASSWORD: guest
-      MAIL_HOST: mailhog
-      MAIL_PORT: 1025
-      MAIL_FROM: noreply@hhflow.local
-      ODOO_URL: http://odoo:8069
-      ODOO_DB: odoo
-      ODOO_USER: admin
-      ODOO_PASSWORD: admin
+      CAMUNDA_ENGINE_REST_URL: http://camunda:8080/engine-rest
     ports:
       - "8080:8080"
 
 volumes:
   postgres_data:
-  odoo_db_data:
-  odoo_data:

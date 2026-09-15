@@ -6,7 +6,7 @@ import com.example.hhflow.dto.response.SubmissionResponse;
 import com.example.hhflow.dto.response.PageResponse;
 import com.example.hhflow.mapper.ApiMapper;
 import com.example.hhflow.security.SecurityUtils;
-import com.example.hhflow.service.ApplicationProcessService;
+import com.example.hhflow.service.CamundaProcessClient;
 import com.example.hhflow.service.JobApplicationService;
 import com.example.hhflow.validation.ValidationConstraints;
 import org.springframework.data.domain.PageRequest;
@@ -30,14 +30,14 @@ import org.springframework.validation.annotation.Validated;
 @RequiredArgsConstructor
 public class ApplicationController {
 
-    private final ApplicationProcessService applicationProcessService;
+    private final CamundaProcessClient camundaProcessClient;
     private final JobApplicationService jobApplicationService;
     private final ApiMapper apiMapper;
 
     @PostMapping("/submit")
     public SubmissionResponse submit(@Valid @RequestBody SubmitApplicationRequest request) {
         Long applicantUserId = SecurityUtils.requireApplicant().getUserId();
-        return applicationProcessService.submitApplication(request, applicantUserId);
+        return camundaProcessClient.submitApplication(request, applicantUserId);
     }
 
     @GetMapping

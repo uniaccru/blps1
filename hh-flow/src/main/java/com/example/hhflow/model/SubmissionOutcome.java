@@ -2,6 +2,7 @@ package com.example.hhflow.model;
 
 public enum SubmissionOutcome {
     COMPLETED,
+    PENDING,
     UNAUTHORIZED,
     REGISTRATION_FAILED,
     VACANCY_ARCHIVED,

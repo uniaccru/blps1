@@ -12,29 +12,13 @@ spring:
   jta:
     enabled: false
 
-  rabbitmq:
-    host: ${RABBITMQ_HOST:rabbitmq}
-    port: ${RABBITMQ_PORT:5672}
-    username: ${RABBITMQ_USER:guest}
-    password: ${RABBITMQ_PASSWORD:guest}
-
-  mail:
-    host: ${MAIL_HOST:mailhog}
-    port: ${MAIL_PORT:1025}
-    properties:
-      mail:
-        smtp:
-          auth: ${MAIL_SMTP_AUTH:false}
-          starttls:
-            enable: ${MAIL_SMTP_STARTTLS:false}
-
 demo:
   rollback-vacancy-id: -1
 
-hh:
-  odoo:
-    enabled: true
-    url: ${ODOO_URL:http://localhost:8069}
-    database: ${ODOO_DB:odoo}
-    username: ${ODOO_USER:admin}
-    password: ${ODOO_PASSWORD:admin}
+camunda:
+  engine-rest-url: ${CAMUNDA_ENGINE_REST_URL:http://localhost:8081/engine-rest}
+  worker-id: hh-flow-worker
+  rest-username: ${CAMUNDA_REST_USERNAME:}
+  rest-password: ${CAMUNDA_REST_PASSWORD:}
+  identity-sync-enabled: ${CAMUNDA_IDENTITY_SYNC_ENABLED:true}
+  identity-sync-initial-password: ${CAMUNDA_IDENTITY_SYNC_INITIAL_PASSWORD:password}

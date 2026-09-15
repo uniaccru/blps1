@@ -1,0 +1,545 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" id="Definitions_JobApplication" targetNamespace="http://example.com/bpmn/job-application" exporter="Camunda Modeler" exporterVersion="5.50.1">
+  <bpmn:error id="Error_ApplicationTransaction" name="ApplicationTransactionFailed" errorCode="APPLICATION_TX_FAILED" />
+  <bpmn:process id="Process_JobApplication" name="Отклик на вакансию" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:laneSet id="LaneSet_Main">
+      <bpmn:lane id="Lane_Employer" name="Работодатель">
+        <bpmn:flowNodeRef>Task_ReviewApplication</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_ReviewComplete</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_System" name="Система">
+        <bpmn:flowNodeRef>Task_CheckVacancyStatus</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CheckResume</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CheckTestRequirements</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CheckToken</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_VacancyActive</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_ResumeExists</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_TestRequired</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Authorized</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_NotifyCandidateError</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_ApplicationFailed</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Subprocess_ApplicationTransaction</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Boundary_TransactionError</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Candidate" name="Соискатель">
+        <bpmn:flowNodeRef>Task_SendRequest</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_InitializeApplicant</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_PhoneAuth</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Start_Apply</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_0r6to5d</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_AutoReject</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_TestPassed</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_TakeTest</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Boundary_TestTimeout</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Start_Apply" name="Нажатие «Откликнуться»" camunda:initiator="starterUserId" />
+    <bpmn:userTask id="Task_SendRequest" name="Отправка запроса" camunda:assignee="${execution.hasVariable(&#39;applicantCamundaUserId&#39;) ? applicantCamundaUserId : starterUserId}" camunda:candidateGroups="APPLICANT">
+      <bpmn:extensionElements>
+        <camunda:taskListener event="create">
+          <camunda:script scriptFormat="groovy">task.setVariable("requestTaskCreatedAt", new java.util.Date().toInstant().toString())</camunda:script>
+        </camunda:taskListener>
+        <camunda:formData>
+          <camunda:formField id="vacancyId" label="ID вакансии" type="long">
+            <camunda:validation>
+              <camunda:constraint name="required" />
+            </camunda:validation>
+          </camunda:formField>
+          <camunda:formField id="resumeId" label="ID резюме" type="long" />
+          <camunda:formField id="resumeFullName" label="Имя в резюме" type="string" />
+          <camunda:formField id="resumeSummary" label="Описание резюме" type="string" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="Task_InitializeApplicant" name="Определить кандидата процесса" camunda:type="external" camunda:topic="initializeApplicant" />
+    <bpmn:serviceTask id="Task_CheckToken" name="Проверка токена авторизации" camunda:type="external" camunda:topic="checkToken" />
+    <bpmn:callActivity id="Task_PhoneAuth" name="Авторизация по номеру телефона" calledElement="Process_PhoneAuthorization" />
+    <bpmn:exclusiveGateway id="Gateway_Authorized" name="Пользователь авторизован?" />
+    <bpmn:serviceTask id="Task_CheckVacancyStatus" name="Проверка статуса вакансии" camunda:type="external" camunda:topic="checkVacancyStatus" />
+    <bpmn:exclusiveGateway id="Gateway_VacancyActive" name="Вакансия активна?" />
+    <bpmn:serviceTask id="Task_CheckResume" name="Проверка наличия резюме у пользователя" camunda:type="external" camunda:topic="checkResume" />
+    <bpmn:exclusiveGateway id="Gateway_ResumeExists" name="Резюме существует?" />
+    <bpmn:serviceTask id="Task_CheckTestRequirements" name="Проверка требований к тестам" camunda:type="external" camunda:topic="checkTestRequirements">
+      <bpmn:incoming>Flow_06ic0ax</bpmn:incoming>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gateway_TestRequired" name="Тест требуется?" />
+    <bpmn:subProcess id="Task_TakeTest" name="Прохождение теста">
+      <bpmn:startEvent id="Start_Test" name="" />
+      <bpmn:serviceTask id="Task_RunTest" name="Прохождение теста" camunda:type="external" camunda:topic="runTest" />
+      <bpmn:endEvent id="End_Test">
+        <bpmn:terminateEventDefinition id="Terminate_Test" />
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="Flow_TestStart" sourceRef="Start_Test" targetRef="Task_RunTest" />
+      <bpmn:sequenceFlow id="Flow_TestEnd" sourceRef="Task_RunTest" targetRef="End_Test" />
+    </bpmn:subProcess>
+    <bpmn:boundaryEvent id="Boundary_TestTimeout" name="Тайм-аут теста" attachedToRef="Task_TakeTest">
+      <bpmn:outgoing>Flow_TestTimeout</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="Timer_Test">
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT30M</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:exclusiveGateway id="Gateway_TestPassed" name="Тест пройден успешно?" />
+    <bpmn:endEvent id="End_AutoReject" name="Автоматический отказ" />
+    <bpmn:serviceTask id="Subprocess_ApplicationTransaction" name="Транзакция: фиксация отклика и уведомление работодателя" camunda:type="external" camunda:topic="registerApplicationTx">
+      <bpmn:documentation>Сохраняет отклик и создаёт внутреннее уведомление работодателю в БД.</bpmn:documentation>
+      <bpmn:outgoing>Flow_21</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:boundaryEvent id="Boundary_TransactionError" name="Ошибка транзакции" attachedToRef="Subprocess_ApplicationTransaction">
+      <bpmn:outgoing>Flow_19</bpmn:outgoing>
+      <bpmn:errorEventDefinition id="ErrorDef_Transaction" errorRef="Error_ApplicationTransaction" />
+    </bpmn:boundaryEvent>
+    <bpmn:serviceTask id="Task_NotifyCandidateError" name="Уведомление соискателя об ошибке/сбое транзакции" camunda:type="external" camunda:topic="notifyCandidateError" />
+    <bpmn:endEvent id="End_ApplicationFailed" name="Отклик не удался" />
+    <bpmn:userTask id="Task_ReviewApplication" name="Рассмотрение отклика" camunda:assignee="${employerCamundaUserId}" camunda:candidateGroups="EMPLOYER">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="decision" label="Решение" type="enum">
+            <camunda:value id="accept" name="Принять" />
+            <camunda:value id="reject" name="Отклонить" />
+          </camunda:formField>
+          <camunda:formField id="comment" label="Комментарий" type="string" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+    </bpmn:userTask>
+    <bpmn:endEvent id="End_ReviewComplete" name="Отклик успешно завершен" />
+    <bpmn:sequenceFlow id="Flow_1" sourceRef="Start_Apply" targetRef="Task_SendRequest" />
+    <bpmn:sequenceFlow id="Flow_2" sourceRef="Task_SendRequest" targetRef="Task_InitializeApplicant" />
+    <bpmn:sequenceFlow id="Flow_2a" sourceRef="Task_InitializeApplicant" targetRef="Task_CheckToken" />
+    <bpmn:sequenceFlow id="Flow_3" sourceRef="Task_CheckToken" targetRef="Gateway_Authorized" />
+    <bpmn:sequenceFlow id="Flow_4" name="Нет" sourceRef="Gateway_Authorized" targetRef="Task_PhoneAuth">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${authorized == false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_5" sourceRef="Task_PhoneAuth" targetRef="Task_CheckToken" />
+    <bpmn:sequenceFlow id="Flow_6" name="Да" sourceRef="Gateway_Authorized" targetRef="Task_CheckVacancyStatus">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${authorized == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_7" sourceRef="Task_CheckVacancyStatus" targetRef="Gateway_VacancyActive" />
+    <bpmn:sequenceFlow id="Flow_8" name="Да" sourceRef="Gateway_VacancyActive" targetRef="Task_CheckResume">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${vacancyActive == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_VacancyInactive" name="Нет" sourceRef="Gateway_VacancyActive" targetRef="End_ApplicationFailed">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${vacancyActive == false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_9" sourceRef="Task_CheckResume" targetRef="Gateway_ResumeExists" />
+    <bpmn:sequenceFlow id="Flow_10" name="Нет" sourceRef="Gateway_ResumeExists" targetRef="Activity_0r6to5d">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${resumeExists == false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_12" name="Да" sourceRef="Gateway_ResumeExists" targetRef="Task_CheckTestRequirements">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${resumeExists == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_13" sourceRef="Task_CheckTestRequirements" targetRef="Gateway_TestRequired" />
+    <bpmn:sequenceFlow id="Flow_14" name="Да" sourceRef="Gateway_TestRequired" targetRef="Task_TakeTest">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${testRequired == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_15" sourceRef="Task_TakeTest" targetRef="Gateway_TestPassed" />
+    <bpmn:sequenceFlow id="Flow_16" name="Нет" sourceRef="Gateway_TestPassed" targetRef="End_AutoReject">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${testPassed == false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_TestTimeout" sourceRef="Boundary_TestTimeout" targetRef="End_AutoReject" />
+    <bpmn:sequenceFlow id="Flow_17" name="Да" sourceRef="Gateway_TestPassed" targetRef="Subprocess_ApplicationTransaction">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${testPassed == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_18" name="Нет" sourceRef="Gateway_TestRequired" targetRef="Subprocess_ApplicationTransaction">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${testRequired == false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_19" sourceRef="Boundary_TransactionError" targetRef="Task_NotifyCandidateError" />
+    <bpmn:sequenceFlow id="Flow_20" sourceRef="Task_NotifyCandidateError" targetRef="End_ApplicationFailed" />
+    <bpmn:sequenceFlow id="Flow_21" sourceRef="Subprocess_ApplicationTransaction" targetRef="Task_ReviewApplication" />
+    <bpmn:sequenceFlow id="Flow_22" sourceRef="Task_ReviewApplication" targetRef="End_ReviewComplete" />
+    <bpmn:dataStoreReference id="DataStore_DB" name="БД" />
+    <bpmn:serviceTask id="Activity_0r6to5d" name="Создание резюме" camunda:type="external" camunda:topic="createResume">
+      <bpmn:incoming>Flow_10</bpmn:incoming>
+      <bpmn:outgoing>Flow_06ic0ax</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_06ic0ax" sourceRef="Activity_0r6to5d" targetRef="Task_CheckTestRequirements" />
+    <bpmn:association id="Assoc_CheckVacancy_DB" sourceRef="DataStore_DB" targetRef="Task_CheckVacancyStatus" />
+    <bpmn:association id="Assoc_CheckResume_DB" sourceRef="DataStore_DB" targetRef="Task_CheckResume" />
+  </bpmn:process>
+  <bpmn:process id="Process_CreateVacancy" name="Создание вакансии" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:startEvent id="Start_CreateVacancy" name="Создание вакансии" />
+    <bpmn:userTask id="Task_FillVacancy" name="Заполнение данных вакансии" camunda:assignee="${employerCamundaUserId}" camunda:candidateGroups="EMPLOYER">
+      <bpmn:extensionElements>
+        <camunda:taskListener event="create">
+          <camunda:script scriptFormat="groovy">task.setVariable("vacancyFormTaskCreatedAt", new java.util.Date().toInstant().toString())</camunda:script>
+        </camunda:taskListener>
+        <camunda:formData>
+          <camunda:formField id="title" label="Название вакансии" type="string" />
+          <camunda:formField id="description" label="Описание" type="string" />
+          <camunda:formField id="requiresTest" label="Требуется тест" type="boolean" defaultValue="false" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="Task_CheckRole" name="Проверка роли" camunda:type="external" camunda:topic="checkRole" />
+    <bpmn:exclusiveGateway id="Gateway_RoleConfirmed" name="Роль подтверждена?" />
+    <bpmn:endEvent id="End_AccessDenied" name="Отказ в доступе" />
+    <bpmn:serviceTask id="Task_PublishVacancy" name="Публикация вакансии" camunda:type="external" camunda:topic="publishVacancy" />
+    <bpmn:endEvent id="End_VacancyPublished" name="Вакансия опубликована" />
+    <bpmn:sequenceFlow id="Flow_V1" sourceRef="Start_CreateVacancy" targetRef="Task_FillVacancy" />
+    <bpmn:sequenceFlow id="Flow_V2" sourceRef="Task_FillVacancy" targetRef="Task_CheckRole" />
+    <bpmn:sequenceFlow id="Flow_V3" sourceRef="Task_CheckRole" targetRef="Gateway_RoleConfirmed" />
+    <bpmn:sequenceFlow id="Flow_V4" name="Нет прав" sourceRef="Gateway_RoleConfirmed" targetRef="End_AccessDenied">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${roleConfirmed == false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_V5" name="Да" sourceRef="Gateway_RoleConfirmed" targetRef="Task_PublishVacancy">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${roleConfirmed == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_V6" sourceRef="Task_PublishVacancy" targetRef="End_VacancyPublished" />
+  </bpmn:process>
+  <bpmn:process id="Process_PhoneAuthorization" name="Авторизация по номеру телефона" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:startEvent id="Start_Phone" />
+    <bpmn:userTask id="Task_EnterPhone" name="Ввод номера телефона" camunda:assignee="${applicantCamundaUserId}" camunda:candidateGroups="APPLICANT">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="phoneNumber" label="Номер телефона" type="string" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+    </bpmn:userTask>
+    <bpmn:endEvent id="End_Phone" />
+    <bpmn:sequenceFlow id="Phone_1" sourceRef="Start_Phone" targetRef="Task_EnterPhone" />
+    <bpmn:sequenceFlow id="Phone_2" sourceRef="Task_EnterPhone" targetRef="End_Phone" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_JobApplication">
+    <bpmndi:BPMNPlane id="BPMNPlane_JobApplication" bpmnElement="Process_JobApplication">
+      <bpmndi:BPMNShape id="Lane_Candidate_di" bpmnElement="Lane_Candidate" isHorizontal="true">
+        <dc:Bounds x="160" y="80" width="2350" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_System_di" bpmnElement="Lane_System" isHorizontal="true">
+        <dc:Bounds x="160" y="230" width="2350" height="390" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Employer_di" bpmnElement="Lane_Employer" isHorizontal="true">
+        <dc:Bounds x="160" y="620" width="2350" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_Apply_di" bpmnElement="Start_Apply">
+        <dc:Bounds x="210" y="135" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="187" y="171" width="82" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SendRequest_di" bpmnElement="Task_SendRequest">
+        <dc:Bounds x="270" y="115" width="110" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_InitializeApplicant_di" bpmnElement="Task_InitializeApplicant">
+        <dc:Bounds x="200" y="270" width="140" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CheckToken_di" bpmnElement="Task_CheckToken">
+        <dc:Bounds x="370" y="270" width="130" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_PhoneAuth_di" bpmnElement="Task_PhoneAuth">
+        <dc:Bounds x="520" y="118" width="130" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Authorized_di" bpmnElement="Gateway_Authorized" isMarkerVisible="true">
+        <dc:Bounds x="540" y="280" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="529" y="330" width="72" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CheckVacancyStatus_di" bpmnElement="Task_CheckVacancyStatus">
+        <dc:Bounds x="640" y="270" width="135" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_VacancyActive_di" bpmnElement="Gateway_VacancyActive" isMarkerVisible="true">
+        <dc:Bounds x="810" y="280" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="810" y="242.5" width="49" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CheckResume_di" bpmnElement="Task_CheckResume">
+        <dc:Bounds x="890" y="270" width="145" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_ResumeExists_di" bpmnElement="Gateway_ResumeExists" isMarkerVisible="true">
+        <dc:Bounds x="1070" y="280" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1063" y="330" width="65" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CheckTestRequirements_di" bpmnElement="Task_CheckTestRequirements">
+        <dc:Bounds x="1150" y="270" width="145" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_TestRequired_di" bpmnElement="Gateway_TestRequired" isMarkerVisible="true">
+        <dc:Bounds x="1330" y="280" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1314" y="330" width="83" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_TestPassed_di" bpmnElement="Gateway_TestPassed" isMarkerVisible="true">
+        <dc:Bounds x="1555" y="128" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1545" y="89" width="69" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_AutoReject_di" bpmnElement="End_AutoReject">
+        <dc:Bounds x="1722" y="135" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1698" y="171" width="84" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_NotifyCandidateError_di" bpmnElement="Task_NotifyCandidateError">
+        <dc:Bounds x="1745" y="520" width="150" height="65" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_ApplicationFailed_di" bpmnElement="End_ApplicationFailed">
+        <dc:Bounds x="1952" y="535" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1925" y="581" width="90" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ReviewApplication_di" bpmnElement="Task_ReviewApplication">
+        <dc:Bounds x="2245" y="658" width="130" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_ReviewComplete_di" bpmnElement="End_ReviewComplete">
+        <dc:Bounds x="2412" y="675" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2389" y="711" width="83" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DataStore_DB_di" bpmnElement="DataStore_DB">
+        <dc:Bounds x="1270" y="785" width="60" height="45" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1293" y="830" width="15" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0r6to5d_di" bpmnElement="Activity_0r6to5d">
+        <dc:Bounds x="1070" y="113" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Subprocess_ApplicationTransaction_di" bpmnElement="Subprocess_ApplicationTransaction">
+        <dc:Bounds x="1460" y="267" width="150" height="75" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_TakeTest_di" bpmnElement="Task_TakeTest" isExpanded="false">
+        <dc:Bounds x="1310" y="118" width="150" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Boundary_TestTimeout_di" bpmnElement="Boundary_TestTimeout">
+        <dc:Bounds x="1420" y="103" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1402" y="143" width="77" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Boundary_TransactionError_di" bpmnElement="Boundary_TransactionError">
+        <dc:Bounds x="1560" y="324" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1551" y="364" width="58" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_1_di" bpmnElement="Flow_1">
+        <di:waypoint x="246" y="153" />
+        <di:waypoint x="270" y="150" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_2_di" bpmnElement="Flow_2">
+        <di:waypoint x="325" y="185" />
+        <di:waypoint x="325" y="230" />
+        <di:waypoint x="270" y="230" />
+        <di:waypoint x="270" y="270" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_2a_di" bpmnElement="Flow_2a">
+        <di:waypoint x="340" y="305" />
+        <di:waypoint x="370" y="305" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_3_di" bpmnElement="Flow_3">
+        <di:waypoint x="500" y="305" />
+        <di:waypoint x="540" y="305" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_4_di" bpmnElement="Flow_4">
+        <di:waypoint x="565" y="280" />
+        <di:waypoint x="565" y="188" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="571" y="225" width="19" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_5_di" bpmnElement="Flow_5">
+        <di:waypoint x="520" y="153" />
+        <di:waypoint x="435" y="153" />
+        <di:waypoint x="435" y="270" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_6_di" bpmnElement="Flow_6">
+        <di:waypoint x="590" y="305" />
+        <di:waypoint x="640" y="305" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="608" y="280" width="14" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_7_di" bpmnElement="Flow_7">
+        <di:waypoint x="775" y="305" />
+        <di:waypoint x="810" y="305" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_8_di" bpmnElement="Flow_8">
+        <di:waypoint x="860" y="305" />
+        <di:waypoint x="890" y="305" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="868" y="280" width="14" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_VacancyInactive_di" bpmnElement="Flow_VacancyInactive">
+        <di:waypoint x="835" y="330" />
+        <di:waypoint x="835" y="553" />
+        <di:waypoint x="1952" y="553" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="841" y="430" width="19" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_9_di" bpmnElement="Flow_9">
+        <di:waypoint x="1035" y="305" />
+        <di:waypoint x="1070" y="305" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_10_di" bpmnElement="Flow_10">
+        <di:waypoint x="1095" y="280" />
+        <di:waypoint x="1095" y="193" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1091" y="189" width="19" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_12_di" bpmnElement="Flow_12">
+        <di:waypoint x="1120" y="305" />
+        <di:waypoint x="1150" y="305" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1128" y="280" width="14" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_13_di" bpmnElement="Flow_13">
+        <di:waypoint x="1295" y="305" />
+        <di:waypoint x="1330" y="305" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_14_di" bpmnElement="Flow_14">
+        <di:waypoint x="1355" y="280" />
+        <di:waypoint x="1355" y="188" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1363" y="224" width="14" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_15_di" bpmnElement="Flow_15">
+        <di:waypoint x="1460" y="153" />
+        <di:waypoint x="1555" y="153" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_16_di" bpmnElement="Flow_16">
+        <di:waypoint x="1605" y="153" />
+        <di:waypoint x="1722" y="153" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1657" y="128" width="19" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_17_di" bpmnElement="Flow_17">
+        <di:waypoint x="1580" y="178" />
+        <di:waypoint x="1580" y="225" />
+        <di:waypoint x="1515" y="225" />
+        <di:waypoint x="1515" y="267" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1588" y="194" width="14" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_18_di" bpmnElement="Flow_18">
+        <di:waypoint x="1380" y="305" />
+        <di:waypoint x="1460" y="305" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1414" y="280" width="19" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_19_di" bpmnElement="Flow_19">
+        <di:waypoint x="1535" y="344" />
+        <di:waypoint x="1535" y="540" />
+        <di:waypoint x="1723" y="540" />
+        <di:waypoint x="1723" y="520" />
+        <di:waypoint x="1755" y="520" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_20_di" bpmnElement="Flow_20">
+        <di:waypoint x="1895" y="539" />
+        <di:waypoint x="1924" y="539" />
+        <di:waypoint x="1924" y="552" />
+        <di:waypoint x="1952" y="552" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_21_di" bpmnElement="Flow_21">
+        <di:waypoint x="1610" y="307" />
+        <di:waypoint x="2218" y="307" />
+        <di:waypoint x="2218" y="693" />
+        <di:waypoint x="2245" y="693" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_22_di" bpmnElement="Flow_22">
+        <di:waypoint x="2375" y="693" />
+        <di:waypoint x="2412" y="693" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_06ic0ax_di" bpmnElement="Flow_06ic0ax">
+        <di:waypoint x="1170" y="153" />
+        <di:waypoint x="1220" y="153" />
+        <di:waypoint x="1220" y="270" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Assoc_CheckVacancy_DB_di" bpmnElement="Assoc_CheckVacancy_DB">
+        <di:waypoint x="1280" y="785" />
+        <di:waypoint x="710" y="340" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Assoc_CheckResume_DB_di" bpmnElement="Assoc_CheckResume_DB">
+        <di:waypoint x="1280" y="785" />
+        <di:waypoint x="960" y="340" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_CreateVacancy">
+    <bpmndi:BPMNPlane id="BPMNPlane_CreateVacancy" bpmnElement="Process_CreateVacancy">
+      <bpmndi:BPMNShape id="Start_CreateVacancy_di" bpmnElement="Start_CreateVacancy">
+        <dc:Bounds x="202" y="180" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_FillVacancy_di" bpmnElement="Task_FillVacancy">
+        <dc:Bounds x="270" y="160" width="130" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CheckRole_di" bpmnElement="Task_CheckRole">
+        <dc:Bounds x="430" y="160" width="120" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_RoleConfirmed_di" bpmnElement="Gateway_RoleConfirmed" isMarkerVisible="true">
+        <dc:Bounds x="580" y="175" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_AccessDenied_di" bpmnElement="End_AccessDenied">
+        <dc:Bounds x="587" y="280" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_PublishVacancy_di" bpmnElement="Task_PublishVacancy">
+        <dc:Bounds x="680" y="160" width="130" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_VacancyPublished_di" bpmnElement="End_VacancyPublished">
+        <dc:Bounds x="860" y="180" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_V1_di" bpmnElement="Flow_V1">
+        <di:waypoint x="238" y="198" />
+        <di:waypoint x="270" y="195" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_V2_di" bpmnElement="Flow_V2">
+        <di:waypoint x="400" y="195" />
+        <di:waypoint x="430" y="195" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_V3_di" bpmnElement="Flow_V3">
+        <di:waypoint x="550" y="195" />
+        <di:waypoint x="580" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_V4_di" bpmnElement="Flow_V4">
+        <di:waypoint x="605" y="225" />
+        <di:waypoint x="605" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_V5_di" bpmnElement="Flow_V5">
+        <di:waypoint x="630" y="200" />
+        <di:waypoint x="680" y="195" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_V6_di" bpmnElement="Flow_V6">
+        <di:waypoint x="810" y="195" />
+        <di:waypoint x="860" y="198" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_PhoneAuth">
+    <bpmndi:BPMNPlane id="BPMNPlane_PhoneAuth" bpmnElement="Process_PhoneAuthorization">
+      <bpmndi:BPMNShape id="Start_Phone_di" bpmnElement="Start_Phone">
+        <dc:Bounds x="100" y="100" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_EnterPhone_di" bpmnElement="Task_EnterPhone">
+        <dc:Bounds x="180" y="80" width="140" height="75" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Phone_di" bpmnElement="End_Phone">
+        <dc:Bounds x="370" y="100" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Phone_1_di" bpmnElement="Phone_1">
+        <di:waypoint x="136" y="118" />
+        <di:waypoint x="180" y="118" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Phone_2_di" bpmnElement="Phone_2">
+        <di:waypoint x="320" y="118" />
+        <di:waypoint x="370" y="118" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram>
+    <bpmndi:BPMNPlane bpmnElement="Task_TakeTest" />
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

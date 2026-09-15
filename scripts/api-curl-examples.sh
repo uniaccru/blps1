@@ -35,7 +35,7 @@ echo "=== POST vacancy (employer) ==="
 curl -fsS -X POST "$BASE_URL/api/v1/vacancies" \
   -H "Authorization: Bearer $EMPLOYER_TOKEN" \
   -H 'Content-Type: application/json' \
-  -d '{"title":"Vacancy from curl","requiresTest":false}'
+  -d '{}'
 echo
 
 echo "=== GET applications (employer, только свои вакансии) ==="

@@ -1,18 +1,18 @@
 package com.example.hhflow.controller;
 
-import com.example.hhflow.dto.request.CreateVacancyRequest;
 import com.example.hhflow.dto.request.VacancyStatusUpdateRequest;
 import com.example.hhflow.dto.response.VacancyDto;
 import com.example.hhflow.dto.response.PageResponse;
+import com.example.hhflow.dto.response.ProcessStartResponse;
 import com.example.hhflow.mapper.ApiMapper;
 import com.example.hhflow.security.SecurityUtils;
 import com.example.hhflow.service.VacancyService;
+import com.example.hhflow.service.CamundaProcessClient;
 import com.example.hhflow.validation.ValidationConstraints;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.validation.annotation.Validated;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/v1/vacancies")
@@ -31,6 +32,7 @@ import org.springframework.validation.annotation.Validated;
 public class VacancyController {
 
     private final VacancyService vacancyService;
+    private final CamundaProcessClient camundaProcessClient;
     private final ApiMapper apiMapper;
 
     @GetMapping
@@ -48,9 +50,9 @@ public class VacancyController {
     }
 
     @PostMapping
-    public VacancyDto create(@Valid @RequestBody CreateVacancyRequest request) {
+    public ProcessStartResponse startCreationProcess() {
         Long employerUserId = SecurityUtils.requireEmployer().getUserId();
-        return apiMapper.toDto(vacancyService.create(request, employerUserId));
+        return new ProcessStartResponse(camundaProcessClient.startVacancyProcess(employerUserId));
     }
 
     @PatchMapping("/{id}/status")
