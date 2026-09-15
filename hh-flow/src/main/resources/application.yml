@@ -42,35 +42,10 @@ spring:
     serialization:
       write-dates-as-timestamps: false
 
-  rabbitmq:
-    host: ${RABBITMQ_HOST:localhost}
-    port: ${RABBITMQ_PORT:5672}
-    username: ${RABBITMQ_USER:guest}
-    password: ${RABBITMQ_PASSWORD:guest}
-
-  mail:
-    host: ${MAIL_HOST:}
-    port: ${MAIL_PORT:587}
-    username: ${MAIL_USERNAME:}
-    password: ${MAIL_PASSWORD:}
-    properties:
-      mail:
-        smtp:
-          auth: ${MAIL_SMTP_AUTH:true}
-          starttls:
-            enable: ${MAIL_SMTP_STARTTLS:true}
-
-hh:
-  email:
-    queue: employer.application.email
-    from: ${MAIL_FROM:noreply@hhflow.local}
-  outbox:
-    poll-interval-ms: 5000
-    batch-size: 50
-    max-retries: 5
-
 camunda:
-  engine-rest-url: http://localhost:8080/engine-rest
+  # WildFly WAR + Camunda Standalone: URL должен указывать на Camunda REST, не на сам WAR.
+  # Пример: Camunda Run на 8081 → http://localhost:8081/engine-rest
+  engine-rest-url: ${CAMUNDA_ENGINE_REST_URL:http://localhost:8081/engine-rest}
   worker-id: hh-flow-worker
   rest-username: ${CAMUNDA_REST_USERNAME:}
   rest-password: ${CAMUNDA_REST_PASSWORD:}

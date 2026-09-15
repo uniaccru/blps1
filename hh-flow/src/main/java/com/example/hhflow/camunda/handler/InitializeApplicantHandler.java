@@ -24,23 +24,57 @@ public class InitializeApplicantHandler implements TopicExternalTaskHandler {
 
     @Override
     public void execute(ExternalTask externalTask, ExternalTaskService externalTaskService) {
-        Object existingApplicantId = externalTask.getVariable("applicantUserId");
-        if (existingApplicantId != null) {
+        try {
+            Object existingApplicantId = externalTask.getVariable("applicantUserId");
+            if (existingApplicantId != null) {
+                Object camundaUserId = externalTask.getVariable("applicantCamundaUserId");
+                externalTaskService.complete(externalTask, Map.of(
+                        "applicantCamundaUserId", camundaUserId != null ? camundaUserId : ""
+                ));
+                return;
+            }
+
+            Object starterVar = externalTask.getVariable("starterUserId");
+            if (starterVar == null) {
+                externalTaskService.handleFailure(
+                        externalTask,
+                        "Missing starterUserId",
+                        "Process was started without initiator. Log in as synced applicant (e.g. ivanpetrovexamplecom) in Tasklist.",
+                        0,
+                        0L
+                );
+                return;
+            }
+
+            String starterUserId = String.valueOf(starterVar);
+            User applicant = userRepository.findAll().stream()
+                    .filter(user -> CamundaIdentitySyncService.camundaUserId(user).equals(starterUserId))
+                    .findFirst()
+                    .orElse(null);
+
+            if (applicant == null) {
+                externalTaskService.handleFailure(
+                        externalTask,
+                        "Unknown Camunda starter: " + starterUserId,
+                        "Start the process as a synced APPLICANT user (seed: ivan.petrov@example.com → ivanpetrovexamplecom), not demo.",
+                        0,
+                        0L
+                );
+                return;
+            }
+
             externalTaskService.complete(externalTask, Map.of(
-                    "applicantCamundaUserId", externalTask.getVariable("applicantCamundaUserId")
+                    "applicantUserId", applicant.getId(),
+                    "applicantCamundaUserId", CamundaIdentitySyncService.camundaUserId(applicant)
             ));
-            return;
+        } catch (RuntimeException exception) {
+            externalTaskService.handleFailure(
+                    externalTask,
+                    exception.getMessage(),
+                    exception.toString(),
+                    0,
+                    0L
+            );
         }
-
-        String starterUserId = String.valueOf(externalTask.getVariable("starterUserId"));
-        User applicant = userRepository.findAll().stream()
-                .filter(user -> CamundaIdentitySyncService.camundaUserId(user).equals(starterUserId))
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Camunda starter is not a known applicant: " + starterUserId));
-
-        externalTaskService.complete(externalTask, Map.of(
-                "applicantUserId", applicant.getId(),
-                "applicantCamundaUserId", CamundaIdentitySyncService.camundaUserId(applicant)
-        ));
     }
 }

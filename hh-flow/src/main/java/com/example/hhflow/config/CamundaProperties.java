@@ -5,7 +5,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "camunda")
 public class CamundaProperties {
 
-    private String engineRestUrl = "http://localhost:8080/engine-rest";
+    private String engineRestUrl = "http://localhost:8081/engine-rest";
     private String workerId = "hh-flow-worker";
     private String restUsername = "";
     private String restPassword = "";
